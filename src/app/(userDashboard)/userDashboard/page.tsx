@@ -1,6 +1,8 @@
 
-export default function CustomarOverviewPage() {
+import MyOrders from '../../../components/_USERDASHBOARD/_Orders/MyOrder'
+
+export default function page() {
   return (
-    <h1 className="text-2xl font-bold">Customer Overviaaew</h1>
+    <MyOrders></MyOrders>
   )
 }
