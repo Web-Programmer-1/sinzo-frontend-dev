@@ -465,7 +465,7 @@ const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYY
                 </div>
 
                 <div className="p-5">
-                  {/* Gateway selector */}
+                {/* gateway seleftor */}
                   <div className="mb-4 grid grid-cols-2 gap-3">
                     {[
                       { key: "BKASH" as TPaymentGateway, src: "/bkash-logo.png", alt: "bKash", number: bkashNumber },
