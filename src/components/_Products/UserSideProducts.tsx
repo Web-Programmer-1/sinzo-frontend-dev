@@ -851,8 +851,8 @@ function ProductCard({
 
         <div style={C.info}>
           <p style={C.title}>
-            {product.title.split(" ").slice(0, 2).join(" ") +
-              (product.title.split(" ").length > 2 ? "..." : "")}
+            {product.title.split(" ").slice(0, 3).join(" ") +
+              (product.title.split(" ").length > 3 ? "..." : "")}
           </p>
      {product.cardShortTitle && (
   <span style={C.catTag}>

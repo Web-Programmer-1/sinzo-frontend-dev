@@ -1,14 +1,11 @@
 
 
-
-
-
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 
 import { usePlaceOrder } from "../../Apis/order";
@@ -51,14 +48,17 @@ const DEFAULT_FORM_VALUES: TPlaceOrderFormValues = {
 
 const CHECKOUT_DRAFT_STORAGE_KEY = "sinzo_checkout_draft_form";
 const CHECKOUT_DRAFT_ID_STORAGE_KEY = "sinzo_checkout_draft_id";
+const CHECKOUT_GUEST_ID_KEY = "sinzo_guest_id";
 
 const PlaceOrderForm = ({ defaultValues }: PlaceOrderFormProps) => {
   const router = useRouter();
+  const pathname = usePathname();
+  
   const { mutateAsync: placeOrder, isPending } = usePlaceOrder();
-  const { data: paymentSettingResponse } = useGetPaymentSetting();
+const { data: paymentSettingResponse }: any = useGetPaymentSetting();
 
-  const bkashNumber = paymentSettingResponse?.data?.bkashNumber?.trim() || "01XXXXXXXXX";
-  const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYYYYYYY";
+const bkashNumber = paymentSettingResponse?.data?.bkashNumber?.trim() || "01XXXXXXXXX";
+const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYYYYYYY";
 
   const { mutateAsync: createCheckoutDraft } = useCreateCheckoutDraft();
   const { mutateAsync: updateCheckoutDraft } = useUpdateCheckoutDraft();
@@ -71,8 +71,8 @@ const PlaceOrderForm = ({ defaultValues }: PlaceOrderFormProps) => {
   const [isHydrated, setIsHydrated] = useState(false);
 
   const isSubmittingRef = useRef(false);
-  const isSavingDraftRef = useRef(false);
   const latestValuesRef = useRef<TPlaceOrderFormValues>(DEFAULT_FORM_VALUES);
+  
   const {
     register,
     handleSubmit,
@@ -104,7 +104,19 @@ const PlaceOrderForm = ({ defaultValues }: PlaceOrderFormProps) => {
     return deliveryArea === "INSIDE_CITY" ? 80 : 140;
   }, [deliveryArea]);
 
+  // Helper: Get or Create Guest ID for tracking drafts
+  const getOrCreateGuestId = () => {
+    if (typeof window === "undefined") return null;
+    let guestId = localStorage.getItem(CHECKOUT_GUEST_ID_KEY);
+    if (!guestId) {
+      guestId = crypto.randomUUID ? crypto.randomUUID() : `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem(CHECKOUT_GUEST_ID_KEY, guestId);
+    }
+    return guestId;
+  };
+
   const buildDraftPayload = (values: TPlaceOrderFormValues) => ({
+    guestId: getOrCreateGuestId(),
     fullName: values.fullName?.trim() || null,
     phone: values.phone?.trim() || null,
     email: values.email?.trim() || null,
@@ -124,12 +136,15 @@ const PlaceOrderForm = ({ defaultValues }: PlaceOrderFormProps) => {
 
   useEffect(() => { latestValuesRef.current = watchedValues; }, [watchedValues]);
 
+  // --- 1. HYDRATION: Load from LocalStorage First (Fast) ---
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       const savedDraftId = localStorage.getItem(CHECKOUT_DRAFT_ID_STORAGE_KEY);
       const savedFormData = localStorage.getItem(CHECKOUT_DRAFT_STORAGE_KEY);
+      
       if (savedDraftId) setDraftId(savedDraftId);
+      
       if (savedFormData) {
         const parsed = JSON.parse(savedFormData);
         reset({ ...DEFAULT_FORM_VALUES, ...parsed });
@@ -142,6 +157,7 @@ const PlaceOrderForm = ({ defaultValues }: PlaceOrderFormProps) => {
     }
   }, [reset]);
 
+  // --- 2. LOCAL SAVE: Save to LocalStorage only on change (No API) ---
   useEffect(() => {
     if (!isHydrated || typeof window === "undefined") return;
     try {
@@ -151,59 +167,65 @@ const PlaceOrderForm = ({ defaultValues }: PlaceOrderFormProps) => {
     }
   }, [watchedValues, isHydrated]);
 
-  useEffect(() => {
-    if (isOnlinePayment && !watchedValues.paymentGateway) {
-      setValue("paymentGateway", activeGateway, { shouldDirty: true, shouldTouch: true });
-    }
-  }, [isOnlinePayment, watchedValues.paymentGateway, activeGateway, setValue]);
-
-  const saveDraftToBackend = async () => {
-    if (!isHydrated || isSubmittingRef.current || isSavingDraftRef.current) return;
-    const currentValues = latestValuesRef.current;
-    if (!hasDraftMeaningfulData(currentValues)) return;
-    isSavingDraftRef.current = true;
+  // --- 3. BACKEND SYNC: Only on Navigation (Cleanup Function) ---
+  const syncDraftToBackend = async (values: TPlaceOrderFormValues) => {
+    if (!hasDraftMeaningfulData(values)) return;
+    
     try {
-      const payload = buildDraftPayload(currentValues);
+      const payload = buildDraftPayload(values);
       if (draftId) {
         await updateCheckoutDraft({ id: draftId, payload });
       } else {
         const created = await createCheckoutDraft(payload);
         if (created?.id) {
           setDraftId(created.id);
-          if (typeof window !== "undefined") localStorage.setItem(CHECKOUT_DRAFT_ID_STORAGE_KEY, created.id);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(CHECKOUT_DRAFT_ID_STORAGE_KEY, created.id);
+          }
         }
       }
     } catch (error) {
-      console.error("Failed to save checkout draft", error);
-    } finally {
-      isSavingDraftRef.current = false;
+      // Silent fail for background sync to avoid blocking navigation
+      console.error("Background draft sync failed", error);
     }
   };
 
-  useEffect(() => {
-    if (typeof window === "undefined" || !isHydrated) return;
-    const handleVisibilityChange = () => { if (document.visibilityState === "hidden") saveDraftToBackend(); };
-    const handlePageHide = () => saveDraftToBackend();
-    window.addEventListener("pagehide", handlePageHide);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      window.removeEventListener("pagehide", handlePageHide);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [draftId, isHydrated]);
-
+  // Cleanup function: Triggers when component unmounts (Page Navigation)
   useEffect(() => {
     return () => {
-      if (typeof window !== "undefined" && !isSubmittingRef.current) {
-        try {
-          const values = latestValuesRef.current;
-          if (hasDraftMeaningfulData(values)) localStorage.setItem(CHECKOUT_DRAFT_STORAGE_KEY, JSON.stringify(values));
-        } catch (error) {
-          console.error("Failed to persist form on unmount", error);
-        }
+      if (isSubmittingRef.current) return;
+      const values = latestValuesRef.current;
+      if (hasDraftMeaningfulData(values)) {
+        // Fire-and-forget: Don't await, just try to send
+        syncDraftToBackend(values);
       }
     };
-  }, []);
+  }, [draftId]);
+
+  // Fallback: Browser Close/Refresh (Uses sendBeacon for reliability)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isSubmittingRef.current) return;
+      const values = latestValuesRef.current;
+      
+      if (hasDraftMeaningfulData(values)) {
+        const payload = buildDraftPayload(values);
+        const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+        // Note: Ensure your backend has an endpoint that can handle this, 
+        // or rely on the cleanup function for internal navigation.
+        navigator.sendBeacon("/api/checkout-draft/sync", blob); 
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [draftId]);
+
+  useEffect(() => {
+    if (isOnlinePayment && !watchedValues.paymentGateway) {
+      setValue("paymentGateway", activeGateway, { shouldDirty: true, shouldTouch: true });
+    }
+  }, [isOnlinePayment, watchedValues.paymentGateway, activeGateway, setValue]);
 
   const onSubmit = async (values: TPlaceOrderFormValues) => {
     isSubmittingRef.current = true;

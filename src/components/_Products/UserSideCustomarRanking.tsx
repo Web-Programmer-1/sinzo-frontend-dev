@@ -97,7 +97,7 @@ export default function UserSideCustomarRanking() {
             </p>
           </div>
 
- <div className="relative flex shrink-0 flex-col items-end justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 px-6 py-4 shadow-lg shadow-indigo-200/50">
+ <div className="relative flex shrink-0 flex-col items-end justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-black to-black px-6 py-4 shadow-lg shadow-indigo-200/50">
   {/* Soft inside glow */}
   <div className="absolute -left-4 -top-4 h-16 w-16 rounded-full bg-white/20 blur-xl"></div>
   

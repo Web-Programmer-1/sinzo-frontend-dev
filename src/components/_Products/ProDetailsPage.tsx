@@ -802,7 +802,7 @@ function ProductDetails({ product }: { product: ProductData }) {
 
             <div className="pd-delivery">
               <TruckIcon />
-              <span>Free delivery on orders over ৳20,000</span>
+              <span>We deliver within 24 hours inside Dhaka and 2–3 days outside Dhaka</span>
             </div>
           </div>
         </div>

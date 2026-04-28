@@ -1,19 +1,16 @@
-
-
-
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useRef, useState, useEffect } from "react"; // useState এবং useEffect ইমপোর্ট করুন
 import {
   Minus,
   Plus,
   ShoppingBag,
-  ShieldCheck,
   Trash2,
-  ArrowRight,
   Package,
+  ChevronDown,
 } from "lucide-react";
 import {
   useClearMyCart,
@@ -47,18 +44,10 @@ type TCartSummary = {
   totalUniqueItems: number;
 };
 
-type TCartResponse = {
-  success: boolean;
-  message: string;
-  meta: null;
-  data: {
-    items: TCartItem[];
-    summary: TCartSummary;
-  };
-};
+
 
 export default function CartPage() {
-  const { data, isLoading, isError } = useGetMyCart();
+  const { data, isLoading, isError, refetch } = useGetMyCart();
 
   const { mutate: updateCartItem, isPending: isUpdatingCart } =
     useUpdateCartItem();
@@ -66,11 +55,46 @@ export default function CartPage() {
     useRemoveCartItem();
   const { mutate: clearMyCart, isPending: isClearingCart } = useClearMyCart();
 
-  const cartData = data as TCartResponse | undefined;
-  const items = cartData?.data?.items || [];
-  const summary = cartData?.data?.summary;
+  // ১. লোকাল স্টেট তৈরি করুন
+  const [localItems, setLocalItems] = useState<TCartItem[]>([]);
+  const [localSummary, setLocalSummary] = useState<TCartSummary | undefined>(undefined);
+
+  const checkoutSectionRef = useRef<HTMLDivElement>(null);
+
+  // ২. যখনই API থেকে ডেটা আসবে, স্টেট আপডেট করুন
+  useEffect(() => {
+    if (data) {
+      setLocalItems(data.data.items);
+      setLocalSummary(data.data.summary);
+    }
+  }, [data]);
+
+  const handleScrollToCheckout = () => {
+    if (checkoutSectionRef.current) {
+      checkoutSectionRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
 
   const handleIncrease = (item: TCartItem) => {
+    // অপটিমিস্টিক আপডেট: UI আগেই চেঞ্জ করে ফেলুন
+    setLocalItems((prev) =>
+      prev.map((i) =>
+        i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+      )
+    );
+    
+    // সামারি আপডেট করুন (সাবটোটাল বাড়ান)
+    if (localSummary) {
+        setLocalSummary({
+            ...localSummary,
+            subtotal: localSummary.subtotal + item.product.price,
+            totalItems: localSummary.totalItems + 1
+        })
+    }
+
     updateCartItem(
       {
         cartId: item.id,
@@ -88,6 +112,8 @@ export default function CartPage() {
           toast.error(
             err?.response?.data?.message || "Failed to update cart item"
           );
+          // এরর হলে আবার রিফেচ করে নিন যাতে ডেটা ঠিক থাকে
+          refetch(); 
         },
       }
     );
@@ -95,17 +121,24 @@ export default function CartPage() {
 
   const handleDecrease = (item: TCartItem) => {
     if (item.quantity <= 1) {
-      removeCartItem(item.id, {
-        onSuccess: (res: any) => {
-          toast.success(res?.message || "Item removed from cart");
-        },
-        onError: (err: any) => {
-          toast.error(
-            err?.response?.data?.message || "Failed to remove cart item"
-          );
-        },
-      });
+      handleRemove(item.id);
       return;
+    }
+
+    // অপটিমিস্টিক আপডেট: UI আগেই চেঞ্জ করে ফেলুন
+    setLocalItems((prev) =>
+      prev.map((i) =>
+        i.id === item.id ? { ...i, quantity: i.quantity - 1 } : i
+      )
+    );
+
+     // সামারি আপডেট করুন (সাবটোটাল কমান)
+     if (localSummary) {
+        setLocalSummary({
+            ...localSummary,
+            subtotal: localSummary.subtotal - item.product.price,
+            totalItems: localSummary.totalItems - 1
+        })
     }
 
     updateCartItem(
@@ -125,12 +158,30 @@ export default function CartPage() {
           toast.error(
             err?.response?.data?.message || "Failed to update cart item"
           );
+           // এরর হলে আবার রিফেচ করে নিন
+           refetch();
         },
       }
     );
   };
 
   const handleRemove = (cartId: string) => {
+    // খুঁজে বের করুন কোন আইটেমটি রিমুভ হচ্ছে (প্রাইস বের করার জন্য)
+    const itemToRemove = localItems.find(i => i.id === cartId);
+
+    // অপটিমিস্টিক আপডেট: আইটেমটি লিস্ট থেকে সরিয়ে ফেলুন
+    setLocalItems((prev) => prev.filter((i) => i.id !== cartId));
+
+    // সামারি আপডেট করুন
+    if (localSummary && itemToRemove) {
+        setLocalSummary({
+            ...localSummary,
+            subtotal: localSummary.subtotal - (itemToRemove.product.price * itemToRemove.quantity),
+            totalItems: localSummary.totalItems - itemToRemove.quantity,
+            totalUniqueItems: localSummary.totalUniqueItems - 1
+        })
+    }
+
     removeCartItem(cartId, {
       onSuccess: (res: any) => {
         toast.success(res?.message || "Item removed from cart");
@@ -139,17 +190,29 @@ export default function CartPage() {
         toast.error(
           err?.response?.data?.message || "Failed to remove cart item"
         );
+        // এরর হলে আবার রিফেচ করে নিন
+        refetch();
       },
     });
   };
 
   const handleClearCart = () => {
+    // সব আইটেম সরিয়ে ফেলুন
+    setLocalItems([]);
+    setLocalSummary({
+        subtotal: 0,
+        totalItems: 0,
+        totalUniqueItems: 0
+    });
+
     clearMyCart(undefined, {
       onSuccess: (res: any) => {
         toast.success(res?.message || "Cart cleared successfully");
       },
       onError: (err: any) => {
         toast.error(err?.response?.data?.message || "Failed to clear cart");
+        // এরর হলে আবার রিফেচ করে নিন
+        refetch();
       },
     });
   };
@@ -173,7 +236,8 @@ export default function CartPage() {
     );
   }
 
-  if (!items.length) {
+  // ৩. ডেটা হিসেবে লোকাল স্টেট ব্যবহার করুন
+  if (!localItems.length) {
     return (
       <section className="min-h-screen bg-[radial-gradient(circle_at_top,_#f5f5f5,_#ececec_45%,_#e6e6e6)] px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl ">
@@ -215,8 +279,8 @@ export default function CartPage() {
               Your Cart
             </h1>
             <p className="mt-2 text-sm text-neutral-500">
-              {summary?.totalItems || 0} item
-              {summary?.totalItems === 1 ? "" : "s"} in your cart
+              {localSummary?.totalItems || 0} item
+              {(localSummary?.totalItems || 0) === 1 ? "" : "s"} in your cart
             </p>
           </div>
 
@@ -230,7 +294,8 @@ export default function CartPage() {
 
         <div className="grid gap-6 lg:grid-cols-[1fr_370px] xl:grid-cols-[1fr_400px]">
           <div className="space-y-5">
-            {items.map((item) => {
+            {/* ৪. ম্যাপিংয়ের সময় localItems ব্যবহার করুন */}
+            {localItems.map((item) => {
               const lineTotal = item.quantity * item.product.price;
 
               return (
@@ -276,15 +341,6 @@ export default function CartPage() {
                             )}
                           </div>
                         </div>
-{/* 
-                        <div className="shrink-0 rounded-2xl border border-white/70 bg-white/70 px-4 py-3 text-left shadow-sm backdrop-blur-xl sm:min-w-[120px] sm:text-right">
-                          <p className="text-xs uppercase tracking-[0.18em] text-neutral-500">
-                            Price
-                          </p>
-                          <p className="mt-1 text-xl font-semibold text-neutral-900">
-                            ৳{item.product.price.toLocaleString()}
-                          </p>
-                        </div> */}
                       </div>
 
                       <div className="flex flex-col gap-4 border-t border-black/5 pt-4 sm:flex-row sm:items-center sm:justify-between">
@@ -333,6 +389,18 @@ export default function CartPage() {
                 </article>
               );
             })}
+
+            <div className="flex flex-col items-center justify-center py-8">
+               <button 
+                 onClick={handleScrollToCheckout}
+                 className="group flex h-14 w-14 items-center justify-center rounded-full border border-black/10 bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-black hover:text-white hover:shadow-xl"
+               >
+                 <ChevronDown className="h-6 w-6 transition-transform duration-300 group-hover:rotate-180" />
+               </button>
+               <p className="mt-3 text-xs font-medium uppercase tracking-widest text-neutral-400">
+                 Scroll Down
+               </p>
+            </div>
           </div>
 
           <aside className="h-fit rounded-[30px] border border-white/70 bg-white/65 p-5 shadow-[0_12px_45px_rgba(0,0,0,0.08)] backdrop-blur-2xl sm:p-6">
@@ -355,30 +423,23 @@ export default function CartPage() {
               <div className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/70 px-4 py-3 text-sm shadow-sm">
                 <span className="text-neutral-500">Total Items</span>
                 <span className="font-semibold text-neutral-900">
-                  {summary?.totalItems || 0}
+                  {localSummary?.totalItems || 0}
                 </span>
               </div>
 
               <div className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/70 px-4 py-3 text-sm shadow-sm">
                 <span className="text-neutral-500">Unique Products</span>
                 <span className="font-semibold text-neutral-900">
-                  {summary?.totalUniqueItems || 0}
+                  {localSummary?.totalUniqueItems || 0}
                 </span>
               </div>
 
               <div className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/70 px-4 py-3 text-sm shadow-sm">
                 <span className="text-neutral-500">Subtotal</span>
                 <span className="font-semibold text-neutral-900">
-                  ৳{summary?.subtotal?.toLocaleString() || 0}
+                  ৳{localSummary?.subtotal?.toLocaleString() || 0}
                 </span>
               </div>
-
-              {/* <div className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/70 px-4 py-3 text-sm shadow-sm">
-                <span className="text-neutral-500">Shipping</span>
-                <span className="font-semibold text-emerald-600">
-                  Calculated later
-                </span>
-              </div> */}
             </div>
 
             <div className="my-6 h-px bg-black/10" />
@@ -387,18 +448,10 @@ export default function CartPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-white/70">Estimated Total</span>
                 <span className="text-2xl font-bold tracking-tight">
-                  {summary?.subtotal?.toLocaleString() || 0} BDT
+                  {localSummary?.subtotal?.toLocaleString() || 0} BDT
                 </span>
               </div>
             </div>
-
-            {/* <button
-              type="button"
-              className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-neutral-800"
-            >
-              Proceed to Checkout
-              <ArrowRight className="h-4 w-4" />
-            </button> */}
 
             <button
               type="button"
@@ -408,10 +461,13 @@ export default function CartPage() {
             >
               {isClearingCart ? "Clearing..." : "Clear Cart"}
             </button>
-
-        
           </aside>
         </div>
+
+        <div ref={checkoutSectionRef} className="mt-16 scroll-mt-24">
+  
+        </div>
+
       </div>
     </section>
   );

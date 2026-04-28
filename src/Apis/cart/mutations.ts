@@ -51,6 +51,15 @@ export const useRemoveCartItem = () => {
   });
 };
 
+
+
+
+
+
+
+
+
+
 export const useClearMyCart = () => {
   const queryClient = useQueryClient();
 
