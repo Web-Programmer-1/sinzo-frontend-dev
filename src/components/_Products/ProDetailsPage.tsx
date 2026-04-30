@@ -795,7 +795,7 @@ function ProductDetails({ product }: { product: ProductData }) {
             <button
               className="pd-buy-btn"
               disabled={soldOut || isPending}
-              onClick={handleBuyNow}
+              onClick={handleAddToCart}
             >
               {soldOut ? "Unavailable" : isPending ? "Processing..." : "Buy it now"}
             </button>

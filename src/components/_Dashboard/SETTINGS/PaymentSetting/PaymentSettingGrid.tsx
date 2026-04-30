@@ -219,7 +219,7 @@ const handleDelete = async () => {
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm">
                   <Image
-                    src="/bkash-logo.png"
+                    src="/banners/bkash.png"
                     alt="bKash"
                     width={36}
                     height={36}
