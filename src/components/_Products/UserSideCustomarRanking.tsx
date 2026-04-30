@@ -69,7 +69,7 @@ export default function UserSideCustomarRanking() {
   const [page, setPage] = useState(1);
   const [selectedBadge, setSelectedBadge] = useState<TCustomerBadge>("ALL");
 
-  const limit = 10;
+  const limit = 4;
 
   const params = useMemo(() => {
     return {

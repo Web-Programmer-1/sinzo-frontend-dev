@@ -91,57 +91,57 @@ const channels = [
     id: "instagram",
     label: "Instagram",
     handle: "@sinzo.bd",
-    desc: "আমাদের latest collection, style inspiration ও নতুন arrivals দেখুন।",
+    desc: "Check out our latest collection, style inspiration, and new arrivals.",
     href: "https://instagram.com/sinzo.bd",
     Icon: IgIcon,
     gradient: "linear-gradient(135deg, #833AB4 0%, #C13584 45%, #E1306C 70%, #FD1D1D 100%)",
     shadowColor: "rgba(193,53,132,0.28)",
-    cta: "Follow করুন",
+    cta: "Follow Us",
     badge: "5.2K Followers",
   },
   {
     id: "facebook",
     label: "Facebook",
     handle: "SINZO",
-    desc: "আমাদের Facebook page এ like দিন। অফার, আপডেট সবার আগে পাবেন।",
+    desc: "Like our Facebook page to get offers and updates first.",
     href: "https://facebook.com/SINZO",
     Icon: FbIcon,
     gradient: "linear-gradient(135deg, #1877F2 0%, #0D5FD6 100%)",
     shadowColor: "rgba(24,119,242,0.28)",
-    cta: "Page Visit করুন",
+    cta: "Visit Page",
     badge: "Always Open",
   },
   {
     id: "whatsapp",
     label: "WhatsApp",
     handle: "01576-450711",
-    desc: "দ্রুত যোগাযোগের জন্য WhatsApp এ message করুন। আমরা সবসময় সাড়া দেই।",
+    desc: "Message us on WhatsApp for quick communication. We always respond.",
     href: "https://wa.me/8801576450711",
     Icon: WaIcon,
     gradient: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
     shadowColor: "rgba(37,211,102,0.28)",
-    cta: "Message করুন",
+    cta: "Message Us",
     badge: "Quick Reply",
   },
   {
     id: "phone",
     label: "Phone Call",
     handle: "01576-450711",
-    desc: "সরাসরি কথা বলতে চাইলে call করুন। অর্ডার, ডেলিভারি বা যেকোনো প্রশ্নের জন্য।",
+    desc: "Call us directly to speak. For orders, delivery, or any questions.",
     href: "tel:+8801576450711",
     Icon: PhoneIcon,
     gradient: "linear-gradient(135deg, #8B6914 0%, #C9A84C 100%)",
     shadowColor: "rgba(139,105,20,0.28)",
-    cta: "Call করুন",
+    cta: "Call Us",
     badge: "Always Open",
   },
 ];
 
 const faqs = [
-  { q: "অর্ডার কীভাবে করবো?", a: "আমাদের website বা Facebook/Instagram এ পণ্য দেখে WhatsApp বা call এ অর্ডার confirm করুন।" },
-  { q: "ডেলিভারি কতদিনে পাবো?", a: "ঢাকার ভেতরে ২৪ ঘণ্টা, ঢাকার বাইরে সর্বোচ্চ ২ দিনের মধ্যে পৌঁছে দেওয়া হয়।" },
-  { q: "পণ্য exchange করা যাবে?", a: "হ্যাঁ, ডেলিভারির ৪৮ ঘণ্টার মধ্যে unused অবস্থায় exchange করা যাবে।" },
-  { q: "Payment কীভাবে করবো?", a: "Cash on delivery সুবিধা আছে। ডেলিভারি পাওয়ার সময় payment করতে পারবেন।" },
+  { q: "How do I place an order?", a: "View products on our website or Facebook/Instagram and confirm your order via WhatsApp or call." },
+  { q: "How long does delivery take?", a: "Within 24 hours inside Dhaka, and within 2 days outside Dhaka." },
+  { q: "Can I exchange the product?", a: "Yes, you can exchange unused items within 48 hours of delivery." },
+  { q: "How do I make payment?", a: "We offer Cash on Delivery. You can pay when you receive the delivery." },
 ];
 
 export default function SinzoContact() {
@@ -422,30 +422,31 @@ export default function SinzoContact() {
             <span className="sc-eyebrow-text">SINZO</span>
           </div>
 
-          <h1 className="sc-hero-title"
-            style={{
-              opacity: loaded ? 1 : 0,
-              transform: loaded ? "translateY(0)" : "translateY(32px)",
-              transition: "opacity 0.9s ease 0.45s, transform 0.9s cubic-bezier(.22,1,.36,1) 0.45s",
-            }}>
-            আমাদের সাথে<br /><em>যোগাযোগ</em><br />করুন
-          </h1>
+<h1 className="sc-hero-title"
+  style={{
+    opacity: loaded ? 1 : 0,
+    transform: loaded ? "translateY(0)" : "translateY(32px)",
+    transition: "opacity 0.9s ease 0.45s, transform 0.9s cubic-bezier(.22,1,.36,1) 0.45s",
+  }}>
+  Get in<br /><em>Touch</em><br />with Us
+</h1>
 
-          <div style={{ opacity: loaded ? 1 : 0, transition: "opacity 0.8s ease 0.75s" }}>
-            <p className="sc-hero-sub">
-              যেকোনো প্রশ্ন, অর্ডার বা সমস্যার জন্য আমরা সবসময় আছি। Instagram, Facebook, WhatsApp বা Phone — যেভাবে স্বাচ্ছন্দ্য সেভাবেই যোগাযোগ করুন।
-            </p>
-            <div className="sc-hero-info">
-              <div className="sc-hero-info-item">
-                <ClockIcon />
-                Always Open
-              </div>
-              <div className="sc-hero-info-item">
-                <MapIcon />
-                Dhaka, Bangladesh 1211
-              </div>
-            </div>
-          </div>
+
+   <div style={{ opacity: loaded ? 1 : 0, transition: "opacity 0.8s ease 0.75s" }}>
+  <p className="sc-hero-sub">
+    We are always here for any questions, orders, or issues. Contact us via Instagram, Facebook, WhatsApp, or Phone — whichever way is most convenient for you.
+  </p>
+  <div className="sc-hero-info">
+    <div className="sc-hero-info-item">
+      <ClockIcon />
+      Always Open
+    </div>
+    <div className="sc-hero-info-item">
+      <MapIcon />
+      Dhaka, Bangladesh 1211
+    </div>
+  </div>
+</div>
         </section>
 
         {/* ── CHANNELS ── */}
@@ -492,18 +493,18 @@ export default function SinzoContact() {
         {/* ── DARK BAND ── */}
         <div className="sc-band">
           <div className="sc-band-inner">
-            <div className="sc-band-left">
-              <div className="sc-band-heading">
-                সরাসরি <em>contact</em><br />করুন আমাদের
-              </div>
-              <p className="sc-band-sub">দ্রুত সাড়া পেতে WhatsApp বা call করুন</p>
-            </div>
+ <div className="sc-band-left">
+  <div className="sc-band-heading">
+    Contact us<br /><em>directly</em>
+  </div>
+  <p className="sc-band-sub">Call or WhatsApp for a quick response</p>
+</div>
             <div className="sc-band-contacts">
               <a href="tel:+8801576450711" className="sc-band-contact">
                 <PhoneIcon /> 01576-450711
               </a>
               <a href="mailto:sinzo.bd@gmail.com" className="sc-band-contact">
-                <EmailIcon /> sinzo.bd@gmail.com
+                <EmailIcon /> sinzowear@gmail.com
               </a>
               <a href="https://wa.me/8801576450711" target="_blank" rel="noopener noreferrer" className="sc-band-contact">
                 <WaIcon /> WhatsApp
@@ -515,13 +516,13 @@ export default function SinzoContact() {
         {/* ── FAQ ── */}
         <section className="sc-faq">
           <Reveal className="sc-faq-inner">
-            <div className="sc-section-tag">
-              <div className="sc-tag-dot" />
-              সাধারণ প্রশ্ন
-            </div>
-            <h2 className="sc-section-heading">
-              কিছু জানার<br />থাকলে <em>দেখুন</em>
-            </h2>
+    <div className="sc-section-tag">
+  <div className="sc-tag-dot" />
+  FAQ
+</div>
+<h2 className="sc-section-heading">
+  Have any<br />questions? <em>Check here</em>
+</h2>
             <div className="sc-faq-list">
               {faqs.map((faq, i) => (
                 <div key={i} className={`sc-faq-item${openFaq === i ? " open" : ""}`}>
@@ -540,24 +541,23 @@ export default function SinzoContact() {
           </Reveal>
         </section>
 
-        {/* ── PROMISE STRIP ── */}
-        <section className="sc-promise">
-          <div className="sc-promise-inner">
-            <div className="sc-promise-left">
-              <div className="sc-promise-title">আমাদের প্রতিশ্রুতি</div>
-              <p className="sc-promise-sub">প্রতিটি customer আমাদের কাছে বিশেষ</p>
-            </div>
-            <div className="sc-promise-items">
-              {["দ্রুত সাড়া", "সৎ সেবা", "সহজ Exchange", "নিরাপদ ডেলিভারি"].map(p => (
-                <div key={p} className="sc-promise-item">
-                  <div className="sc-promise-check"><CheckIcon /></div>
-                  {p}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
+   {/* ── PROMISE STRIP ── */}
+<section className="sc-promise">
+  <div className="sc-promise-inner">
+    <div className="sc-promise-left">
+      <div className="sc-promise-title">Our Promise</div>
+      <p className="sc-promise-sub">Every customer is special to us</p>
+    </div>
+    <div className="sc-promise-items">
+      {["Quick Response", "Honest Service", "Easy Exchange", "Safe Delivery"].map(p => (
+        <div key={p} className="sc-promise-item">
+          <div className="sc-promise-check"><CheckIcon /></div>
+          {p}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
       </div>
     </>
   );

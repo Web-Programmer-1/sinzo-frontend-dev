@@ -80,10 +80,10 @@ const policies = [
     gradient: "linear-gradient(135deg, #8B6914 0%, #C9A84C 100%)",
     bg: "linear-gradient(135deg, rgba(139,105,20,0.06) 0%, rgba(201,168,76,0.03) 100%)",
     items: [
-      { label: "Inside Dhaka", value: "২৪ ঘণ্টার মধ্যে" },
-      { label: "Outside Dhaka", value: "২ দিনের মধ্যে" },
+      { label: "Inside Dhaka", value: "Within 24 hours" },
+      { label: "Outside Dhaka", value: "Within 2 days" },
       { label: "Delivery Partner", value: "Steadfast / Pathao" },
-      { label: "Charge", value: "লোকেশন অনুযায়ী" },
+      { label: "Charge", value: "Depends on location" },
     ],
   },
   {
@@ -92,9 +92,9 @@ const policies = [
     gradient: "linear-gradient(135deg, #2D6A4F 0%, #52B788 100%)",
     bg: "linear-gradient(135deg, rgba(45,106,79,0.06) 0%, rgba(82,183,136,0.03) 100%)",
     items: [
-      { label: "Data Use", value: "অর্ডার ও ডেলিভারির জন্য" },
-      { label: "Third Party", value: "শেয়ার করা হয় না" },
-      { label: "Info Collected", value: "নাম, ফোন, ঠিকানা" },
+      { label: "Data Use", value: "For order & delivery only" },
+      { label: "Third Party", value: "Never shared" },
+      { label: "Info Collected", value: "Name, Phone, Address" },
     ],
   },
   {
@@ -103,10 +103,10 @@ const policies = [
     gradient: "linear-gradient(135deg, #4A3880 0%, #9B89CC 100%)",
     bg: "linear-gradient(135deg, rgba(74,56,128,0.06) 0%, rgba(155,137,204,0.03) 100%)",
     items: [
-      { label: "Confirmation", value: "ফোন কলের মাধ্যমে" },
-      { label: "Cancellation", value: "কনফার্মের পর নয়" },
-      { label: "Color Variance", value: "আলোয় ভিন্ন হতে পারে" },
-      { label: "Policy Update", value: "যেকোনো সময় সম্ভব" },
+      { label: "Confirmation", value: "Via phone call" },
+      { label: "Cancellation", value: "Not allowed after confirmation" },
+      { label: "Color Variance", value: "May vary due to lighting" },
+      { label: "Policy Update", value: "Subject to change anytime" },
     ],
   },
   {
@@ -115,21 +115,20 @@ const policies = [
     gradient: "linear-gradient(135deg, #8B2E2E 0%, #D4706A 100%)",
     bg: "linear-gradient(135deg, rgba(139,46,46,0.06) 0%, rgba(212,112,106,0.03) 100%)",
     items: [
-      { label: "Exchange Window", value: "ডেলিভারির ৪৮ ঘণ্টা" },
-      { label: "Return Policy", value: "ভুল/ক্ষতিগ্রস্ত — ২৪ ঘণ্টা" },
-      { label: "Condition", value: "অব্যবহৃত, মূল অবস্থায়" },
-      { label: "Delivery Charge", value: "প্রযোজ্য হতে পারে" },
+      { label: "Exchange Window", value: "48 hours from delivery" },
+      { label: "Return Policy", value: "Wrong/Damaged — 24 hours" },
+      { label: "Condition", value: "Unused, in original condition" },
+      { label: "Delivery Charge", value: "May apply" },
     ],
   },
 ];
 
 const values = [
-  { label: "Premium Quality", desc: "সেরা কাঁচামাল, নিখুঁত কারুকাজ" },
-  { label: "Clean Design", desc: "মিনিমাল, টাইমলেস স্টাইল" },
-  { label: "Everyday Comfort", desc: "সারাদিন আরামদায়ক পরিধান" },
-  { label: "Reliable Service", desc: "দ্রুত ও নির্ভরযোগ্য ডেলিভারি" },
+  { label: "Premium Quality", desc: "Best materials, perfect craftsmanship" },
+  { label: "Clean Design", desc: "Minimal, timeless style" },
+  { label: "Everyday Comfort", desc: "Comfortable wear all day long" },
+  { label: "Reliable Service", desc: "Fast and reliable delivery" },
 ];
-
 export default function SinzoAbout() {
   const [loaded, setLoaded] = useState(false);
   useEffect(() => { const t = setTimeout(() => setLoaded(true), 80); return () => clearTimeout(t); }, []);
@@ -483,63 +482,62 @@ export default function SinzoAbout() {
           </div>
         </div>
 
-        {/* ── ABOUT ── */}
-        <section className="sz-about">
-          <Reveal delay={0}>
-            <div>
-              <div className="sz-section-tag">
-                <div className="sz-section-tag-dot" />
-                Our Story
-              </div>
-              <h2 className="sz-section-heading">
-                Fashion that<br />speaks <em>for itself.</em>
-              </h2>
-              <p className="sz-about-text">
-                SINZO একটি আধুনিক ফ্যাশন ব্র্যান্ড যা প্রিমিয়াম কোয়ালিটি ও ক্লিন ডিজাইনের উপর ফোকাস করে। আমরা প্রতিদিনকার পরিধানের জন্য স্টাইলিশ, আরামদায়ক এবং টেকসই পোশাক তৈরি করি।
-              </p>
-              <p className="sz-about-text">
-                আমাদের লক্ষ্য হলো ট্রেন্ডি ফিট ও নির্ভরযোগ্য সেবার মাধ্যমে আপনাকে সেরা ভ্যালু দেওয়া — কারণ আপনি সেরাটাই পাওয়ার যোগ্য।
-              </p>
-              <div className="sz-values">
-                {values.map(v => (
-                  <div key={v.label} className="sz-value-item">
-                    <div className="sz-value-check"><IconCheck /></div>
-                    <div className="sz-value-label">{v.label}</div>
-                    <div className="sz-value-desc">{v.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Reveal>
+ <section className="sz-about">
+  <Reveal delay={0}>
+    <div>
+      <div className="sz-section-tag">
+        <div className="sz-section-tag-dot" />
+        Our Story
+      </div>
+      <h2 className="sz-section-heading">
+        Fashion that<br />speaks <em>for itself.</em>
+      </h2>
+      <p className="sz-about-text">
+        SINZO is a modern fashion brand focused on premium quality and clean design. We create stylish, comfortable, and durable clothing for everyday wear.
+      </p>
+      <p className="sz-about-text">
+        Our goal is to provide you with the best value through trendy fits and reliable service — because you deserve the best.
+      </p>
+      <div className="sz-values">
+        {values.map(v => (
+          <div key={v.label} className="sz-value-item">
+            <div className="sz-value-check"><IconCheck /></div>
+            <div className="sz-value-label">{v.label}</div>
+            <div className="sz-value-desc">{v.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </Reveal>
 
-          <Reveal delay={0.15}>
-            <div className="sz-img-wrap">
-              <div className="sz-img-card">
-                <img src={SINZO_IMG} alt="SINZO Refined Denim Culture" />
-                <div className="sz-img-overlay" />
-                <div className="sz-img-stars">
-                  {[...Array(5)].map((_,i) => <IconStar key={i} />)}
-                  <span className="sz-img-stars-text" style={{ marginLeft: 4 }}>Premium</span>
-                </div>
-                <div className="sz-img-badge">
-                  <div className="sz-img-badge-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                      <path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="sz-img-badge-label">Brand Promise</div>
-                    <div className="sz-img-badge-val">Premium Quality · Clean Design</div>
-                  </div>
-                </div>
-              </div>
-              <div className="sz-img-float">
-                <div className="sz-img-float-num">100%</div>
-                <div className="sz-img-float-lbl">Quality<br/>Assured</div>
-              </div>
-            </div>
-          </Reveal>
-        </section>
+  <Reveal delay={0.15}>
+    <div className="sz-img-wrap">
+      <div className="sz-img-card">
+        <img src={SINZO_IMG} alt="SINZO Refined Denim Culture" />
+        <div className="sz-img-overlay" />
+        <div className="sz-img-stars">
+          {[...Array(5)].map((_,i) => <IconStar key={i} />)}
+          <span className="sz-img-stars-text" style={{ marginLeft: 4 }}>Premium</span>
+        </div>
+        <div className="sz-img-badge">
+          <div className="sz-img-badge-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+              <path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div>
+            <div className="sz-img-badge-label">Brand Promise</div>
+            <div className="sz-img-badge-val">Premium Quality · Clean Design</div>
+          </div>
+        </div>
+      </div>
+      <div className="sz-img-float">
+        <div className="sz-img-float-num">100%</div>
+        <div className="sz-img-float-lbl">Quality<br/>Assured</div>
+      </div>
+    </div>
+  </Reveal>
+</section>
 
         {/* ── STATS BAND ── */}
         <div className="sz-stats-band">
@@ -573,7 +571,7 @@ export default function SinzoAbout() {
                 </h2>
               </div>
               <p className="sz-policy-hdr-right">
-                আমরা বিশ্বাস করি স্বচ্ছতায়। আমাদের সমস্ত নীতি সহজ ও স্পষ্ট।
+       We believe in transparency. All our policies are simple and clear.
               </p>
             </div>
           </Reveal>
