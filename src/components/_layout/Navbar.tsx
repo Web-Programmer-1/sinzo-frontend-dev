@@ -908,12 +908,12 @@ export default function Navbar() {
           </div>
 
           <Link href="/">
-            <div style={{ height: "48px", display: "flex", alignItems: "center" }}>
+            <div style={{ height: "60px", display: "flex", alignItems: "center" }}>
               <Image
                 src={logoUrl || "/bg-remove-logo.png"}
                 alt="Logo"
-                width={120}
-                height={48}
+                width={150}
+                height={90}
                 priority
                 style={{
                   height: "100%",

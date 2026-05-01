@@ -31,7 +31,8 @@ const PRODUCT_BADGES = [
 ];
 
 const SIZE_TYPES = ["MEN", "WOMEN", "UNISEX", "KIDS"];
-const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "28", "30", "32", "34", "36", "38"];
+const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "XXL","3XL", "4XL", 
+  "26", "28", "30", "32", "34", "36", "38", "40"];
 
 const STEPS = [
   { id: 1, label: "Basic Info", icon: "📋" },
@@ -720,18 +721,7 @@ export default function CreateProductForm() {
                   </div>
                 </Card>
 
-                <Card>
-                  <CardHeader title="Size Guide Data" sub="JSON measurements" />
-                  <div className="p-5">
-                    <textarea
-                      {...register("sizeGuideData")}
-                      rows={5}
-                      className={`${inputCls()} resize-none font-mono text-xs`}
-                      placeholder={`{"size":"M","chest":"40","length":"28"}`}
-                    />
-                    <p className="text-xs text-stone-400 mt-1.5">Valid JSON object with size measurements</p>
-                  </div>
-                </Card>
+      
               </div>
             </div>
           )}

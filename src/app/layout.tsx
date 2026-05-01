@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Providers from "./providers";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+import MetaPixel from "../components/meta/metaPixel";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -10,11 +11,11 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: " Sinzo-Offcial",
+  title: " Sinzo-Official",
   description:
     "Sinzo Shop BD (sinzooffcial) - Best e-commerce shopping platform in Bangladesh. Buy wood products, furniture and more.",
   keywords: [
-    "sinzooffcial",
+    "sinzoofficial",
     "sinzo shop",
     "sinzo shop bd",
     "সিনজো শপ",
@@ -56,9 +57,9 @@ export const metadata: Metadata = {
       "Sinzo Shop BD (sinzooffcial) - Best e-commerce shopping platform in Bangladesh.",
     images: ["/banners/sinzo.jpg"],
   },
-verification: {
-  google: "t-9rmkJsXhaFSRhufoG0jDraI-8tHflunwmiNhtNjcs",
-},
+  verification: {
+    google: "t-9rmkJsXhaFSRhufoG0jDraI-8tHflunwmiNhtNjcs",
+  },
   robots: {
     index: true,
     follow: true,
@@ -78,6 +79,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={poppins.className} suppressHydrationWarning>
         <Providers>{children}</Providers>
+        <MetaPixel />
       </body>
     </html>
   );

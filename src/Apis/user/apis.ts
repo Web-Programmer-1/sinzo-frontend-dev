@@ -24,8 +24,22 @@ export const getMe = async () => {
   return res.data;
 };
 
-export const getAllUsers = () =>
-  apiClient.get(userEndpoints.getAll);
+// export const getAllUsers = () =>
+//   apiClient.get(userEndpoints.getAll);
+
+
+
+export const getAllUsers = async (params: {
+  page?: number;
+  limit?: number;
+  email?: string;
+}) => {
+  const { data } = await apiClient.get("/users", { params });
+  return data;
+};
+
+
+
 
 export const getUserById = (id: string) =>
   apiClient.get(userEndpoints.getById(id));

@@ -2,12 +2,28 @@ import { useQuery } from "@tanstack/react-query";
 import { getAllUsers, getUserById, getMe } from "./apis";
 import { userKeys } from "./keys";
 
-export const useGetAllUsers = () => {
+// export const useGetAllUsers = () => {
+//   return useQuery({
+//     queryKey: userKeys.all,
+//     queryFn: getAllUsers,
+//   });
+// };
+
+
+
+export const useGetAllUsers = (initialParams?: {
+  page?: number;
+  limit?: number;
+  email?: string;
+}) => {
   return useQuery({
-    queryKey: userKeys.all,
-    queryFn: getAllUsers,
+    queryKey: ["users", initialParams], // Params included in key for caching
+    queryFn: () => getAllUsers(initialParams || {}),
   });
 };
+
+
+
 
 export const useGetUserById = (id: string) => {
   return useQuery({
