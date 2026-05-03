@@ -14,6 +14,18 @@ export type TPlaceOrderPayload = {
   paymentMethod?: "CASH_ON_DELIVERY" | "ONLINE_PAYMENT";
 };
 
+
+
+export type TPlaceOrderWithMetaPayload = TPlaceOrderPayload & {
+  meta?: {
+    totalAmount: number;
+    items: {
+      productId: string;
+    }[];
+  };
+};
+
+
 export type TUpdateOrderStatusPayload = {
   status:
     | "PENDING"

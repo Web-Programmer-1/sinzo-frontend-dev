@@ -5,6 +5,16 @@ export type TAddToCartPayload = {
   selectedSize?: string;
 };
 
+
+export type TAddToCartWithMetaPayload = TAddToCartPayload & {
+  meta?: {
+    title: string;
+    price: number;
+  };
+};
+
+
+
 export type TUpdateCartItemPayload = {
   quantity?: number;
   selectedColor?: string;

@@ -17,6 +17,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAddToCart } from "../../Apis/cart";
 import { toast } from "sonner";
 import ProductImageGallery from "./ProductZoom";
+import { metaTracker } from "../../lib/meta/metaTracker";
 
 /* ══════════════════════════════════════════════════════
    Types
@@ -557,7 +558,12 @@ function ProductDetails({ product }: { product: ProductData }) {
   }, [product.sizes, product.colorVariants, selectedSize, selectedColor]);
 
   // ── Cart handlers ────────────────────────────────
-  const handleAddToCart = useCallback(() => {
+  const handleAddToCart =  useCallback(() => {
+
+
+    
+
+
     if (soldOut || !validateSelection()) return;
     addToCart(cartPayload, {
       onSuccess: (res: any) => {
@@ -568,6 +574,10 @@ function ProductDetails({ product }: { product: ProductData }) {
         toast.error(err?.response?.data?.message || "Failed to add cart");
       },
     });
+
+
+
+
   }, [soldOut, validateSelection, addToCart, cartPayload, router]);
 
   const handleBuyNow = useCallback(() => {
@@ -577,8 +587,11 @@ function ProductDetails({ product }: { product: ProductData }) {
     });
   }, [soldOut, validateSelection, addToCart, cartPayload, router]);
 
-  // ── Color / related slider ───────────────────────
-  const handleColorSelect = useCallback((color: string) => setSelectedColor(color), []);
+
+const handleColorSelect = useCallback((color: string) => {
+  setSelectedColor(color);
+  setActiveImg(0); 
+}, []);
 
   const scrollRelated = useCallback((direction: "left" | "right") => {
     relatedSliderRef.current?.scrollBy({

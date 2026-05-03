@@ -13,7 +13,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: " Sinzo-Official",
   description:
-    "Sinzo Shop BD (sinzooffcial) - Best e-commerce shopping platform in Bangladesh. Buy wood products, furniture and more.",
+    "sinzooffcial - Best e-commerce shopping platform in Bangladesh. Buy wood products, furniture and more.",
   keywords: [
     "sinzoofficial",
     "sinzo shop",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Sinzo Shop BD", url: "https://www.sinzooffcial.com" }],
   creator: "Sinzo Shop BD",
   publisher: "Sinzo Shop BD",
-  metadataBase: new URL("https://www.sinzooffcial.com"),
+  metadataBase: new URL("https://sinzooffcial.com"),
   alternates: {
     canonical: "https://www.sinzooffcial.com",
   },
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     apple: "/banners/sinzo.jpg",
   },
   openGraph: {
-    title: "Sinzo Shop BD | sinzooffcial",
+    title: "Sinzo sinzooffcial",
     description:
       "Sinzo Shop BD (sinzooffcial) - Best e-commerce shopping platform in Bangladesh.",
     url: "https://www.sinzooffcial.com",

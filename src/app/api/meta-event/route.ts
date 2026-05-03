@@ -30,10 +30,16 @@ export async function POST(req: Request) {
               req.headers.get("x-forwarded-for")?.split(",")[0] ||
               "127.0.0.1",
           },
+
+                custom_data: body.custom_data || {},
+
         },
       ],
     };
 
+
+
+    
     // 🔥 ONLY dev mode-এ test_event_code add হবে
     if (process.env.NODE_ENV === "development" && testCode) {
       payload.test_event_code = testCode;

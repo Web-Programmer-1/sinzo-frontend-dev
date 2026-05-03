@@ -79,14 +79,14 @@ export default function CartPage() {
   };
 
   const handleIncrease = (item: TCartItem) => {
-    // অপটিমিস্টিক আপডেট: UI আগেই চেঞ্জ করে ফেলুন
+
     setLocalItems((prev) =>
       prev.map((i) =>
         i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
       )
     );
     
-    // সামারি আপডেট করুন (সাবটোটাল বাড়ান)
+   
     if (localSummary) {
         setLocalSummary({
             ...localSummary,
@@ -125,14 +125,12 @@ export default function CartPage() {
       return;
     }
 
-    // অপটিমিস্টিক আপডেট: UI আগেই চেঞ্জ করে ফেলুন
     setLocalItems((prev) =>
       prev.map((i) =>
         i.id === item.id ? { ...i, quantity: i.quantity - 1 } : i
       )
     );
 
-     // সামারি আপডেট করুন (সাবটোটাল কমান)
      if (localSummary) {
         setLocalSummary({
             ...localSummary,

@@ -449,6 +449,7 @@ export default function ProductImageGallery({
                 alt={`${productName} thumbnail ${i + 1}`}
                 width={60}
                 height={60}
+                unoptimized
               />
             </button>
           ))}
@@ -476,6 +477,7 @@ export default function ProductImageGallery({
           onTouchEnd={onTouchEnd}
         >
           <Image
+            key={images[activeIndex]}
             src={images[activeIndex]}
             alt={productName}
             fill

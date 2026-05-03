@@ -7,16 +7,35 @@ import {
 } from "./apis";
 import { cartKeys } from "./keys";
 import type {
-  TAddToCartPayload,
+
+  TAddToCartWithMetaPayload,
   TUpdateCartItemParams,
 } from "./types";
+import { metaTracker } from "../../lib/meta/metaTracker";
+
+
 
 export const useAddToCart = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: TAddToCartPayload) => addToCart(payload),
-    onSuccess: async () => {
+    mutationFn: (payload: TAddToCartWithMetaPayload) => {
+      const { meta, ...apiPayload } = payload;
+
+      return addToCart(apiPayload);
+    },
+
+    onSuccess: async (_data, variables) => {
+      if (variables.meta) {
+        await metaTracker("AddToCart", {
+          content_ids: [variables.productId],
+          content_name: variables.meta.title,
+          content_type: "product",
+          value: variables.meta.price,
+          currency: "BDT",
+        });
+      }
+
       await queryClient.invalidateQueries({
         queryKey: cartKeys.myCart(),
       });
