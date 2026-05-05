@@ -244,7 +244,7 @@ const handleDelete = async (id: string | number) => {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-800">
-              All Categories
+              All Categories Sinzo Official
             </h1>
             <p className="mt-1 text-sm text-slate-500">
               {isLoading ? "Loading categories..." : `${categories.length} categories available`}
