@@ -14,6 +14,19 @@ const PlusIcon = () => (
   </svg>
 );
 
+
+const CopyIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+    />
+  </svg>
+);
+
+
+
 const EditIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
     <path
@@ -85,6 +98,22 @@ interface CategoryItemProps {
 function CategoryItem({ category, onDelete, deletingId }: CategoryItemProps) {
   const isDeleting = deletingId === category.id;
 
+
+  const handleCopyCategoryByIdUrl = async () => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const url = `${baseUrl}/category/${category.id}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("CategoryById URL copied");
+    } catch {
+      toast.error("Failed to copy URL");
+    }
+  };
+
+
+
+
   return (
     <div className="group rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -104,7 +133,7 @@ function CategoryItem({ category, onDelete, deletingId }: CategoryItemProps) {
             </h3>
 
             <div className="mt-2 flex flex-wrap items-center gap-2">
-   
+
 
               {typeof category.productCount === "number" && (
                 <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
@@ -115,8 +144,28 @@ function CategoryItem({ category, onDelete, deletingId }: CategoryItemProps) {
           </div>
         </div>
 
+
+
         {/* Right */}
-        <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center sm:justify-end sm:w-auto w-full">
+        <div className="grid grid-cols-3 gap-3 sm:flex sm:items-center sm:justify-end sm:w-auto w-full">
+
+
+
+
+
+
+          <button
+            type="button"
+            onClick={handleCopyCategoryByIdUrl}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-4 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+          >
+            <CopyIcon />
+            Copy
+          </button>
+
+
+
+
           <Link
             href={`/dashboard/category/category-list/${category.id}`}
             className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 text-sm font-semibold text-amber-700 transition hover:bg-amber-100"
@@ -203,39 +252,39 @@ export default function AllCategoryList() {
     return data?.data ?? [];
   }, [data]);
 
-const handleDelete = async (id: string | number) => {
-  const result = await Swal.fire({
-    title: "Are you sure?",
-    text: "This category will be permanently deleted!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#ef4444",
-    cancelButtonColor: "#64748b",
-    confirmButtonText: "Yes, delete it!",
-    cancelButtonText: "Cancel",
-  });
+  const handleDelete = async (id: string | number) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This category will be permanently deleted!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    });
 
-  if (!result.isConfirmed) return;
+    if (!result.isConfirmed) return;
 
-  try {
-    setDeletingId(id);
+    try {
+      setDeletingId(id);
 
-    const res = await deleteCategory(String(id));
+      const res = await deleteCategory(String(id));
 
-    // ✅ Sonner success toast
-    toast.success(res?.message || "Category deleted successfully");
-  } catch (error: any) {
-    const errorMessage =
-      error?.response?.data?.message ||
-      error?.message ||
-      "Failed to delete category";
+      // ✅ Sonner success toast
+      toast.success(res?.message || "Category deleted successfully");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to delete category";
 
-    // ❌ Sonner error toast
-    toast.error(errorMessage);
-  } finally {
-    setDeletingId(null);
-  }
-};
+      // ❌ Sonner error toast
+      toast.error(errorMessage);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
