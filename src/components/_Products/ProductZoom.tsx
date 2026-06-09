@@ -1,6 +1,9 @@
+
+
+
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 
 interface ProductImageGalleryProps {
@@ -8,7 +11,6 @@ interface ProductImageGalleryProps {
   activeIndex: number;
   onImageChange: (index: number) => void;
   productName: string;
-
   onMouseDown?: (e: React.MouseEvent) => void;
   onMouseLeave?: (e: React.MouseEvent) => void;
   onMouseUp?: (e: React.MouseEvent) => void;
@@ -19,231 +21,265 @@ interface ProductImageGalleryProps {
   galleryRef?: React.RefObject<HTMLDivElement>;
 }
 
+const SWIPE_THRESHOLD = 40;
+const SWIPE_MAX_TIME = 400;
+
 export default function ProductImageGallery({
   images,
   activeIndex,
   onImageChange,
   productName,
-
   onMouseDown,
   onMouseLeave: onExternalMouseLeave,
   onMouseUp,
   onMouseMove: onExternalMouseMove,
-  onTouchStart,
-  onTouchMove,
-  onTouchEnd,
+  onTouchStart: onExternalTouchStart,
+  onTouchMove: onExternalTouchMove,
+  onTouchEnd: onExternalTouchEnd,
   galleryRef,
 }: ProductImageGalleryProps) {
+  const [isDesktop, setIsDesktop] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [lensPosition, setLensPosition] = useState({ x: 0, y: 0 });
-  const imageRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isDesktop, setIsDesktop] = useState(false);
   const [mobileZoomImage, setMobileZoomImage] = useState<string | null>(null);
+  const [imgVisible, setImgVisible] = useState(true);
+
+  const imageWrapperRef = useRef<HTMLDivElement>(null);
+  const thumbStripRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef(0);
+  const touchStartTime = useRef(0);
+  const mouseStartX = useRef(0);
 
   useEffect(() => {
-    const checkDesktop = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-    };
-
-    checkDesktop();
-    window.addEventListener("resize", checkDesktop);
-    return () => window.removeEventListener("resize", checkDesktop);
+    const check = () => setIsDesktop(window.innerWidth >= 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const ref = galleryRef?.current || imageRef.current;
-    if (!ref || !isDesktop || !isZoomed) return;
+  // Scroll active thumbnail into view
+  useEffect(() => {
+    const strip = thumbStripRef.current;
+    if (!strip) return;
+    const thumb = strip.children[activeIndex] as HTMLElement | undefined;
+    if (!thumb) return;
+    thumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [activeIndex]);
 
+  // Crossfade on image change
+  const changeImage = useCallback(
+    (idx: number) => {
+      setImgVisible(false);
+      setTimeout(() => {
+        onImageChange((idx + images.length) % images.length);
+        setImgVisible(true);
+      }, 130);
+    },
+    [images.length, onImageChange],
+  );
+
+  /* ── Desktop zoom ── */
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    onExternalMouseMove?.(e);
+    const ref = galleryRef?.current || imageWrapperRef.current;
+    if (!ref || !isDesktop || !isZoomed) return;
     const rect = ref.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    setLensPosition({
-      x: e.clientX - rect.left - 50,
-      y: e.clientY - rect.top - 50,
-    });
+    setLensPosition({ x: e.clientX - rect.left - 50, y: e.clientY - rect.top - 50 });
     setZoomPosition({ x, y });
   };
 
-  const handleMouseEnter = () => {
-    if (isDesktop) {
-      setIsZoomed(true);
-    }
+  const handleMouseEnter = () => { if (isDesktop) setIsZoomed(true); };
+  const handleMouseLeave = (e: React.MouseEvent) => {
+    if (isDesktop) setIsZoomed(false);
+    onExternalMouseLeave?.(e);
   };
 
-  const handleMouseLeave = () => {
-    if (isDesktop) {
-      setIsZoomed(false);
-    }
-  };
-
+  /* ── Mobile tap-to-zoom ── */
   const handleImageClick = () => {
-    if (!isDesktop) {
-      setMobileZoomImage(images[activeIndex]);
+    if (!isDesktop) setMobileZoomImage(images[activeIndex]);
+  };
+
+  /* ── Swipe on main preview ── */
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartTime.current = Date.now();
+    onExternalTouchStart?.(e);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    const elapsed = Date.now() - touchStartTime.current;
+    if (Math.abs(diff) > SWIPE_THRESHOLD && elapsed < SWIPE_MAX_TIME) {
+      changeImage(activeIndex + (diff > 0 ? 1 : -1));
     }
+    onExternalTouchEnd?.(e);
   };
 
-  const closeMobileZoom = () => {
-    setMobileZoomImage(null);
+  /* ── Mouse drag on main preview ── */
+  const handleMouseDown = (e: React.MouseEvent) => {
+    mouseStartX.current = e.clientX;
+    onMouseDown?.(e);
   };
 
-  const showThumbnails = images.length > 1;
+  const handleMouseUp = (e: React.MouseEvent) => {
+    const diff = mouseStartX.current - e.clientX;
+    if (Math.abs(diff) > SWIPE_THRESHOLD) {
+      changeImage(activeIndex + (diff > 0 ? 1 : -1));
+    }
+    onMouseUp?.(e);
+  };
+
+  const showThumbs = images.length > 1;
 
   return (
-    <div ref={containerRef} className="gallery-container">
+    <>
       <style>{`
-        .gallery-container {
+        .pgal-root {
           display: flex;
           flex-direction: column;
           background: #f0efed;
-          position: relative;
-        }
-
-        .gallery-main {
-          display: flex;
-          flex-direction: column;
-          order: 1;
-          position: relative;
-        }
-
-        .gallery-thumbnails {
-          display: flex;
-          flex-direction: row;
-          gap: 6px;
-          padding: 8px 10px;
-          overflow-x: auto;
-          scrollbar-width: none;
-          order: 2;
-          background: #f0efed;
-        }
-
-        .gallery-thumbnails::-webkit-scrollbar {
-          display: none;
-        }
-
-        .gallery-thumb {
-          flex-shrink: 0;
-          width: 60px;
-          height: 60px;
-          border-radius: 8px;
-          border: 2px solid transparent;
-          background: rgba(255,255,255,0.6);
-          overflow: hidden;
-          padding: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: border-color 0.15s, transform 0.14s;
-          cursor: pointer;
-        }
-
-        .gallery-thumb:hover {
-          transform: translateY(-1px);
-        }
-
-        .gallery-thumb--active {
-          border-color: #111;
-          background: #fff;
-        }
-
-        .gallery-thumb img {
           width: 100%;
-          height: 100%;
-          object-fit: contain;
-          padding: 3px;
         }
 
-        .gallery-image-wrapper {
+        /* ── Main preview ── */
+        .pgal-preview {
           position: relative;
           width: 100%;
-          min-height: 300px;
+          aspect-ratio: 1 / 1;
           overflow: hidden;
+          background: #f5f4f1;
           cursor: grab;
           user-select: none;
           -webkit-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
+          order: 1;
         }
+        .pgal-preview:active { cursor: grabbing; }
+        .pgal-preview.desktop-zoom { cursor: crosshair; }
+        .pgal-preview.desktop-zoom-active { cursor: none; }
 
-        .gallery-image-wrapper:active,
-        .gallery-image-wrapper.dragging {
-          cursor: grabbing !important;
-        }
-
-        .gallery-image-wrapper.desktop-zoom {
-          cursor: crosshair;
-        }
-
-        .gallery-image-wrapper.desktop-zoom-active {
-          cursor: none;
-        }
-
-        .gallery-image {
+        .pgal-main-img {
           width: 100%;
           height: 100%;
-          min-height: 300px;
           object-fit: contain;
-          object-position: center;
-          padding: 20px 16px 16px;
-          transition: transform 0.45s ease;
-          user-select: none;
+          padding: 18px;
           pointer-events: none;
+         
           -webkit-user-drag: none;
-          user-drag: none;
+          transition: opacity 0.13s ease;
+        }
+        .pgal-main-img.fade-out { opacity: 0; }
+        .pgal-main-img.clickable { cursor: zoom-in; }
+
+        /* dots */
+        .pgal-dots {
+          position: absolute;
+          bottom: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: none;
+          gap: 5px;
+          z-index: 5;
+        }
+        .pgal-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          border: none;
+          padding: 0;
+          background: rgba(0,0,0,0.22);
+          transition: background 0.2s, transform 0.2s;
+          cursor: pointer;
+        }
+        .pgal-dot.on {
+          background: #111;
+          transform: scale(1.35);
         }
 
-        .gallery-image.mobile-clickable {
-          cursor: zoom-in;
-        }
-
-        .zoom-lens {
+        /* zoom lens (desktop) */
+        .pgal-lens {
           position: absolute;
           width: 100px;
           height: 100px;
-          border: 2px solid rgba(0, 0, 0, 0.4);
-          background: rgba(255, 255, 255, 0.25);
+          border: 1.5px solid rgba(0,0,0,0.35);
+          background: rgba(255,255,255,0.2);
           pointer-events: none;
           z-index: 20;
-          display: none;
+          border-radius: 4px;
         }
-
-        .zoom-lens.active {
-          display: block;
-        }
-
-        .zoom-result-overlay {
+        .pgal-zoom-overlay {
           position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
+          inset: 0;
           pointer-events: none;
           z-index: 15;
-          display: none;
           overflow: hidden;
-          border-radius: inherit;
         }
-
-        .zoom-result-overlay.active {
-          display: block;
-        }
-
-        .zoom-result-overlay img {
+        .pgal-zoom-overlay img {
           position: absolute;
-          top: 0;
-          left: 0;
+          inset: 0;
           width: 100%;
           height: 100%;
           object-fit: contain;
-          padding: 20px 16px 16px;
+          padding: 18px;
         }
 
-        .mobile-zoom-modal {
+        /* ── Thumbnail strip ── */
+        .pgal-strip-wrap {
+          position: relative;
+          background: #f5f4f1;
+          flex-shrink: 0;
+          order: 2;
+        }
+        .pgal-strip-wrap::after {
+          display: none;
+        }
+        .pgal-strip {
+          display: flex;
+          gap: 2px;
+          padding: 0 8px 2px;
+          overflow-x: auto;
+          scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .pgal-strip::-webkit-scrollbar { display: none; }
+
+        .pgal-thumb {
+          flex: 0 0 calc((100% - 4px) / 3);
+          min-width: calc((100% - 4px) / 3);
+          aspect-ratio: 1 / 1;
+          border-radius: 10px;
+          border: 2px solid #e0ddd8;
+          background: #f0efed;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          scroll-snap-align: start;
+          cursor: pointer;
+          transition: border-color 0.18s, transform 0.14s, background 0.18s;
+          padding: 0;
+        }
+        .pgal-thumb img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          padding: 6px;
+          pointer-events: none;
+        }
+        .pgal-thumb.on {
+          border-color: #111;
+          background: #fff;
+        }
+        .pgal-thumb:active { transform: scale(0.96); }
+
+        /* ── Mobile zoom modal ── */
+        .pgal-modal-bd {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.95);
+          background: rgba(0,0,0,0.94);
           z-index: 9999;
           display: flex;
           flex-direction: column;
@@ -251,251 +287,153 @@ export default function ProductImageGallery({
           justify-content: center;
           padding: 20px;
         }
-
-        .mobile-zoom-close {
+        .pgal-modal-close {
           position: absolute;
           top: 20px;
           right: 20px;
           width: 44px;
           height: 44px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255,255,255,0.18);
           border: none;
           color: #fff;
+          font-size: 22px;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          font-size: 24px;
           z-index: 10;
-          transition: background 0.2s;
         }
-
-        .mobile-zoom-close:hover {
-          background: rgba(255, 255, 255, 0.3);
-        }
-
-        .mobile-zoom-image {
+        .pgal-modal-img {
           max-width: 100%;
           max-height: 80vh;
           object-fit: contain;
           border-radius: 8px;
         }
-
-        .mobile-zoom-hint {
+        .pgal-modal-hint {
           position: absolute;
-          bottom: 30px;
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 14px;
-          text-align: center;
+          bottom: 28px;
+          color: rgba(255,255,255,0.55);
+          font-size: 13px;
         }
 
-        .gallery-nav {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          border: none;
-          background: rgba(255, 255, 255, 0.9);
-          color: black;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.15s, transform 0.15s;
-          z-index: 10;
-          cursor: pointer;
-        }
-
-        .gallery-nav:hover {
-          background: #fff;
-          transform: translateY(-50%) scale(1.08);
-        }
-
-        .gallery-nav--prev {
-          left: 10px;
-        }
-
-        .gallery-nav--next {
-          right: 10px;
-        }
-
-        .gallery-dots {
-          position: absolute;
-          bottom: 10px;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          gap: 5px;
-          z-index: 10;
-        }
-
-        .gallery-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          border: none;
-          background: rgba(255,255,255,0.5);
-          padding: 0;
-          transition: background 0.18s, transform 0.18s;
-          cursor: pointer;
-        }
-
-        .gallery-dot--active {
-          background: #fff;
-          transform: scale(1.3);
-        }
-
+        /* ── Desktop layout ── */
         @media (min-width: 640px) {
-          .gallery-container {
+          .pgal-root {
             flex-direction: row;
+            width: 50%;
+            flex-shrink: 0;
+            min-height: 460px;
           }
-
-          .gallery-main {
-            flex-direction: row;
-            width: 100%;
+          .pgal-strip-wrap {
+            width: 82px;
+            flex-shrink: 0;
+            order: 1 !important;
           }
-
-          .gallery-thumbnails {
+          .pgal-strip-wrap::after { display: none; }
+          .pgal-strip {
             flex-direction: column;
-            order: 1;
-            width: 72px;
-            flex-shrink: 0;
-            padding: 10px 6px;
-            overflow-y: auto;
             overflow-x: hidden;
+            overflow-y: auto;
+            padding: 10px 8px;
+            gap: 8px;
             max-height: 520px;
+            scroll-snap-type: none;
           }
-
-          .gallery-thumb {
-            width: 58px;
-            height: 58px;
-            flex-shrink: 0;
+          .pgal-thumb {
+            flex: 0 0 64px;
+            min-width: unset;
+            height: 64px;
+            width: 64px;
+            border-radius: 8px;
+            border-color: transparent;
+            background: #fff;
+            aspect-ratio: unset;
           }
-
-          .gallery-image-wrapper {
+          .pgal-thumb.on {
+            border-color: #111;
+          }
+          .pgal-preview {
             flex: 1;
-            order: 2;
+            order: 2 !important;
+            aspect-ratio: unset;
             min-height: 460px;
-          }
-
-          .gallery-image {
-            min-height: 460px;
-            padding: 24px 18px 18px;
-          }
-
-          .zoom-result-overlay img {
-            padding: 24px 18px 18px;
           }
         }
 
         @media (min-width: 900px) {
-          .gallery-container {
-            width: 52%;
-          }
-
-          .gallery-thumbnails {
-            width: 80px;
-            padding: 14px 8px;
-            gap: 8px;
-            max-height: 600px;
-          }
-
-          .gallery-thumb {
-            width: 64px;
-            height: 64px;
-            border-radius: 9px;
-          }
-
-          .gallery-image-wrapper {
-            min-height: 540px;
-          }
-
-          .gallery-image {
-            min-height: 540px;
-            padding: 30px 22px 22px;
-          }
-
-          .zoom-result-overlay img {
-            padding: 30px 22px 22px;
-          }
-
-          .gallery-nav {
-            width: 36px;
-            height: 36px;
-          }
+          .pgal-root { width: 52%; min-height: 540px; }
+          .pgal-strip-wrap { width: 90px; }
+          .pgal-strip { padding: 14px 10px; gap: 10px; max-height: 600px; }
+          .pgal-thumb { flex: 0 0 68px; min-width: unset; height: 68px; width: 68px; border-radius: 10px; border-color: transparent; background: #fff; aspect-ratio: unset; }
+          .pgal-thumb.on { border-color: #111; }
+          .pgal-preview { min-height: 540px; }
         }
 
         @media (max-width: 1023px) {
-          .zoom-lens,
-          .zoom-result-overlay {
-            display: none !important;
-          }
+          .pgal-lens,
+          .pgal-zoom-overlay { display: none !important; }
         }
       `}</style>
 
-      {showThumbnails && (
-        <div className="gallery-thumbnails">
-          {images.map((img, i) => (
-            <button
-              key={i}
-              className={`gallery-thumb${i === activeIndex ? " gallery-thumb--active" : ""}`}
-              onClick={() => onImageChange(i)}
-              type="button"
-            >
-              <Image
-                src={img}
-                alt={`${productName} thumbnail ${i + 1}`}
-                width={60}
-                height={60}
-                unoptimized
-              />
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="pgal-root">
+        {/* Thumbnail strip */}
+        {showThumbs && (
+          <div className="pgal-strip-wrap">
+            <div className="pgal-strip" ref={thumbStripRef}>
+              {images.map((src, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`pgal-thumb${i === activeIndex ? " on" : ""}`}
+                  onClick={() => changeImage(i)}
+                  aria-label={`View image ${i + 1}`}
+                >
+                  <Image
+                    src={src}
+                    alt={`${productName} ${i + 1}`}
+                    width={68}
+                    height={68}
+                    unoptimized
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
-      <div className="gallery-main">
+        {/* Main preview */}
         <div
-          ref={galleryRef || imageRef}
-          className={`gallery-image-wrapper${isDesktop && isZoomed ? " desktop-zoom-active" : ""}${isDesktop ? " desktop-zoom" : ""}`}
-          onMouseMove={(e) => {
-            handleMouseMove(e);
-            onExternalMouseMove?.(e);
-          }}
+          ref={galleryRef || imageWrapperRef}
+          className={`pgal-preview${isDesktop ? " desktop-zoom" : ""}${isDesktop && isZoomed ? " desktop-zoom-active" : ""}`}
+          onMouseMove={handleMouseMove}
           onMouseEnter={handleMouseEnter}
-          onMouseLeave={(e) => {
-            handleMouseLeave();
-            onExternalMouseLeave?.(e);
-          }}
+          onMouseLeave={handleMouseLeave}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={onExternalTouchMove}
+          onTouchEnd={handleTouchEnd}
           onClick={handleImageClick}
-          onMouseDown={onMouseDown}
-          onMouseUp={onMouseUp}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
         >
           <Image
-            key={images[activeIndex]}
             src={images[activeIndex]}
             alt={productName}
             fill
-            className={`gallery-image${!isDesktop ? " mobile-clickable" : ""}`}
-            sizes="(max-width: 640px) 100vw, (max-width: 900px) 50vw, 40vw"
+            className={`pgal-main-img${!imgVisible ? " fade-out" : ""}${!isDesktop ? " clickable" : ""}`}
+            sizes="(max-width: 640px) 100vw, (max-width: 900px) 50vw, 42vw"
+            priority
             unoptimized
           />
 
+          {/* Desktop zoom lens */}
           {isDesktop && isZoomed && (
             <>
               <div
-                className="zoom-lens active"
-                style={{
-                  left: `${lensPosition.x}px`,
-                  top: `${lensPosition.y}px`,
-                }}
+                className="pgal-lens"
+                style={{ left: lensPosition.x, top: lensPosition.y }}
               />
-              <div className="zoom-result-overlay active">
+              <div className="pgal-zoom-overlay">
                 <Image
                   src={images[activeIndex]}
                   alt={`${productName} zoomed`}
@@ -511,75 +449,44 @@ export default function ProductImageGallery({
             </>
           )}
 
-          {showThumbnails && (
-            <>
-              <button
-                className="gallery-nav gallery-nav--prev"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onImageChange((activeIndex - 1 + images.length) % images.length);
-                }}
-                type="button"
-                aria-label="Previous image"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </button>
-              <button
-                className="gallery-nav gallery-nav--next"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onImageChange((activeIndex + 1) % images.length);
-                }}
-                type="button"
-                aria-label="Next image"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
-              <div className="gallery-dots">
-                {images.map((_, i) => (
-                  <button
-                    key={i}
-                    className={`gallery-dot${i === activeIndex ? " gallery-dot--active" : ""}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onImageChange(i);
-                    }}
-                    type="button"
-                    aria-label={`Go to image ${i + 1}`}
-                  />
-                ))}
-              </div>
-            </>
+          {/* Dots (mobile only — hidden on desktop via CSS on strip) */}
+          {showThumbs && (
+            <div className="pgal-dots">
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`pgal-dot${i === activeIndex ? " on" : ""}`}
+                  onClick={(e) => { e.stopPropagation(); changeImage(i); }}
+                  aria-label={`Go to image ${i + 1}`}
+                />
+              ))}
+            </div>
           )}
         </div>
       </div>
 
+      {/* Mobile full-screen zoom */}
       {mobileZoomImage && (
-        <div className="mobile-zoom-modal" onClick={closeMobileZoom}>
+        <div className="pgal-modal-bd" onClick={() => setMobileZoomImage(null)}>
           <button
-            className="mobile-zoom-close"
-            onClick={closeMobileZoom}
-            aria-label="Close zoom"
+            className="pgal-modal-close"
+            onClick={() => setMobileZoomImage(null)}
+            aria-label="Close"
           >
             ✕
           </button>
           <Image
             src={mobileZoomImage}
             alt={`${productName} zoomed`}
-            width={600}
-            height={800}
-            className="mobile-zoom-image"
+            width={700}
+            height={900}
+            className="pgal-modal-img"
             unoptimized
           />
-          <div className="mobile-zoom-hint">
-            Tap anywhere to close
-          </div>
+          <p className="pgal-modal-hint">Tap anywhere to close</p>
         </div>
       )}
-    </div>
+    </>
   );
 }
