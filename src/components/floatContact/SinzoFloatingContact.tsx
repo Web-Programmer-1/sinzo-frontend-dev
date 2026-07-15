@@ -145,7 +145,6 @@ export default function SinzoFloatingContact() {
     setMounted(true);
   }, []);
 
-  // Close on Escape key
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -154,7 +153,6 @@ export default function SinzoFloatingContact() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Lock body scroll when open on mobile
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";

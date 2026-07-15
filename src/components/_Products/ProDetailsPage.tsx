@@ -17,7 +17,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAddToCart } from "../../Apis/cart";
 import { toast } from "sonner";
 import ProductImageGallery from "./ProductZoom";
-import { metaTracker } from "../../lib/meta/metaTracker";
 
 /* ══════════════════════════════════════════════════════
    Types
@@ -516,7 +515,6 @@ function ProductDetails({ product }: { product: ProductData }) {
   const router = useRouter();
   const { mutate: addToCart, isPending } = useAddToCart();
 
-  // ── Derived values (memoized) ────────────────────
   const soldOut = product.stock === 0;
   const maxQty = useMemo(() => Math.min(product.stock, 10), [product.stock]);
 
@@ -533,18 +531,20 @@ function ProductDetails({ product }: { product: ProductData }) {
     return Array.from(new Set(base));
   }, [activeVariant, product.productCardImage, product.galleryImages]);
 
-  // ── Shared cart payload ──────────────────────────
   const cartPayload = useMemo(
     () => ({
       productId: product.id,
       quantity,
       selectedColor: selectedColor || undefined,
       selectedSize: selectedSize || undefined,
+      meta: {
+        title: product.title,
+        price: product.price,
+      },
     }),
-    [product.id, quantity, selectedColor, selectedSize],
+    [product.id, quantity, selectedColor, selectedSize, product.title, product.price],
   );
 
-  // ── Validation ───────────────────────────────────
   const validateSelection = useCallback((): boolean => {
     if (product.sizes?.length > 0 && !selectedSize) {
       toast.error("Select size first");
@@ -557,11 +557,7 @@ function ProductDetails({ product }: { product: ProductData }) {
     return true;
   }, [product.sizes, product.colorVariants, selectedSize, selectedColor]);
 
-  // ── Cart handlers ────────────────────────────────
-  const handleAddToCart =  useCallback(() => {
-
-
-    
+  const handleAddToCart = useCallback(() => {
 
 
     if (soldOut || !validateSelection()) return;
@@ -576,8 +572,6 @@ function ProductDetails({ product }: { product: ProductData }) {
     });
 
 
-
-
   }, [soldOut, validateSelection, addToCart, cartPayload, router]);
 
   const handleBuyNow = useCallback(() => {
@@ -588,10 +582,10 @@ function ProductDetails({ product }: { product: ProductData }) {
   }, [soldOut, validateSelection, addToCart, cartPayload, router]);
 
 
-const handleColorSelect = useCallback((color: string) => {
-  setSelectedColor(color);
-  setActiveImg(0); 
-}, []);
+  const handleColorSelect = useCallback((color: string) => {
+    setSelectedColor(color);
+    setActiveImg(0);
+  }, []);
 
   const scrollRelated = useCallback((direction: "left" | "right") => {
     relatedSliderRef.current?.scrollBy({
@@ -600,7 +594,6 @@ const handleColorSelect = useCallback((color: string) => {
     });
   }, []);
 
-  // ── Drag / swipe handlers ────────────────────────
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     setIsDragging(true);
     setStartX(e.pageX);
@@ -624,14 +617,14 @@ const handleColorSelect = useCallback((color: string) => {
     [isDragging, startX, displayImages.length],
   );
 
-  const handleMouseMove = useCallback((_e: React.MouseEvent) => {}, []);
+  const handleMouseMove = useCallback((_e: React.MouseEvent) => { }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     setIsDragging(true);
     setStartX(e.touches[0].pageX);
   }, []);
 
-  const handleTouchMove = useCallback((_e: React.TouchEvent) => {}, []);
+  const handleTouchMove = useCallback((_e: React.TouchEvent) => { }, []);
 
   const handleTouchEnd = useCallback(
     (e: React.TouchEvent) => {
@@ -649,7 +642,6 @@ const handleColorSelect = useCallback((color: string) => {
     [isDragging, startX, displayImages.length],
   );
 
-  // ── Size guide toggle ────────────────────────────
   const openSizeGuide = useCallback(() => setSizeGuideOpen(true), []);
   const closeSizeGuide = useCallback(() => setSizeGuideOpen(false), []);
 
@@ -737,11 +729,10 @@ const handleColorSelect = useCallback((color: string) => {
                       key={s}
                       type="button"
                       onClick={() => setSelectedSize((prev) => (prev === s ? "" : s))}
-                      className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
-                        selectedSize === s
+                      className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${selectedSize === s
                           ? "border-black bg-black text-white"
                           : "border-gray-300 hover:border-black"
-                      }`}
+                        }`}
                     >
                       {s}
                     </button>
@@ -764,11 +755,10 @@ const handleColorSelect = useCallback((color: string) => {
                       onClick={() => handleColorSelect(cv.color)}
                       aria-label={cv.color}
                       title={cv.color}
-                      className={`h-8 w-8 rounded-full border-2 transition ${
-                        selectedColor === cv.color
+                      className={`h-8 w-8 rounded-full border-2 transition ${selectedColor === cv.color
                           ? "scale-105 border-black"
                           : "border-gray-300"
-                      }`}
+                        }`}
                       style={{ background: cv.color.toLowerCase() }}
                     />
                   ))}

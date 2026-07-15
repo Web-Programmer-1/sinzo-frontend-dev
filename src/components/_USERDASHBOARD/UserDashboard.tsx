@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
 type DropdownItem = {
   label: string;
   icon: React.ReactNode;
@@ -19,7 +18,6 @@ type NavItemType = {
   dropdown?: DropdownItem[];
 };
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
 const Icon = {
   Menu: () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -85,7 +83,6 @@ const Icon = {
   ),
 };
 
-// ── Nav Config — শুধু এখানে href বদলালেই হবে ─────────────────────────────────
 const NAV_ITEMS: NavItemType[] = [
 
   {
@@ -102,7 +99,6 @@ const NAV_ITEMS: NavItemType[] = [
   },
 ];
 
-// ── Page Title Map ─────────────────────────────────────────────────────────────
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard":                    "Dashboard Overview",
   "/dashboard/products":           "Products",
@@ -114,7 +110,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/settings":           "Settings",
 };
 
-// ── NavItem Component ─────────────────────────────────────────────────────────
 interface NavItemProps {
   item: NavItemType;
   collapsed: boolean;
@@ -133,7 +128,6 @@ function NavItem({ item, collapsed, onClose }: NavItemProps) {
   const active = "bg-black text-white shadow-lg shadow-violet-200";
   const inactive = "text-slate-500 hover:bg-slate-100 hover:text-slate-800";
 
-  // Dropdown variant
   if (item.dropdown) {
     return (
       <div>
@@ -176,7 +170,6 @@ function NavItem({ item, collapsed, onClose }: NavItemProps) {
     );
   }
 
-  // Regular Link variant
   return (
     <Link
       href={item.href!}
@@ -190,7 +183,6 @@ function NavItem({ item, collapsed, onClose }: NavItemProps) {
   );
 }
 
-// ── Sidebar Component ─────────────────────────────────────────────────────────
 interface SidebarProps {
   collapsed: boolean;
   mobile?: boolean;
@@ -266,7 +258,6 @@ function Sidebar({ collapsed, mobile = false, onClose }: SidebarProps) {
   );
 }
 
-// ── Topbar Component ──────────────────────────────────────────────────────────
 interface TopbarProps {
   collapsed: boolean;
   onToggleSidebar: () => void;
@@ -304,7 +295,6 @@ function Topbar({ collapsed, onToggleSidebar, onOpenMobile }: TopbarProps) {
   );
 }
 
-// ── Dashboard Layout ──────────────────────────────────────────────────────────
 export default function UserDashboard({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed]   = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);

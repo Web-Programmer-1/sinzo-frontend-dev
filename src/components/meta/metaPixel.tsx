@@ -1,14 +1,19 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 export default function MetaPixel() {
   const pathname = usePathname();
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  const isFirstLoad = useRef(true);
 
   useEffect(() => {
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      return;
+    }
     if (typeof window !== "undefined" && (window as any).fbq) {
       (window as any).fbq("track", "PageView");
     }
@@ -36,6 +41,10 @@ export default function MetaPixel() {
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
   }, []);
+
+  if (!pixelId) {
+    return null;
+  }
 
   return (
     <>

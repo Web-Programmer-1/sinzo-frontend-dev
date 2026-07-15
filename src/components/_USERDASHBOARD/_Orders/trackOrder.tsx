@@ -659,5 +659,4 @@ const TrackOrder = ({ orderNumber }: TrackOrderProps) => {
   );
 };
 
-export default TrackOrder;
-// new
+export default TrackOrder;

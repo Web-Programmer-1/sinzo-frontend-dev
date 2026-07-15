@@ -178,11 +178,9 @@ export default function CreateProductForm() {
   const [done, setDone] = useState(false);
 
   const { mutate: createProduct } = useCreateProduct();
-  // console.log("CreateProdust", createProduct)
   const { data: catRes } = useGetAllCategories({ limit: 100 });
   const categories: any[] = catRes?.data || [];
 
-  console.log("Categories", categories)
 
   const {
     register,
@@ -208,7 +206,6 @@ export default function CreateProductForm() {
 
   const watchSizes = watch("sizes") || [];
   const watchSizeType = watch("sizeType");
-
 
 
   useEffect(() => {

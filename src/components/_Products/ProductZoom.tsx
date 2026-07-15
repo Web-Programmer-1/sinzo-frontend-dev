@@ -1,6 +1,5 @@
 
 
-
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -58,7 +57,6 @@ export default function ProductImageGallery({
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Scroll active thumbnail into view
   useEffect(() => {
     const strip = thumbStripRef.current;
     if (!strip) return;
@@ -67,7 +65,6 @@ export default function ProductImageGallery({
     thumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   }, [activeIndex]);
 
-  // Crossfade on image change
   const changeImage = useCallback(
     (idx: number) => {
       setImgVisible(false);
@@ -79,7 +76,6 @@ export default function ProductImageGallery({
     [images.length, onImageChange],
   );
 
-  /* ── Desktop zoom ── */
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     onExternalMouseMove?.(e);
     const ref = galleryRef?.current || imageWrapperRef.current;
@@ -97,12 +93,10 @@ export default function ProductImageGallery({
     onExternalMouseLeave?.(e);
   };
 
-  /* ── Mobile tap-to-zoom ── */
   const handleImageClick = () => {
     if (!isDesktop) setMobileZoomImage(images[activeIndex]);
   };
 
-  /* ── Swipe on main preview ── */
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchStartTime.current = Date.now();
@@ -118,7 +112,6 @@ export default function ProductImageGallery({
     onExternalTouchEnd?.(e);
   };
 
-  /* ── Mouse drag on main preview ── */
   const handleMouseDown = (e: React.MouseEvent) => {
     mouseStartX.current = e.clientX;
     onMouseDown?.(e);
@@ -144,7 +137,6 @@ export default function ProductImageGallery({
           width: 100%;
         }
 
-        /* ── Main preview ── */
         .pgal-preview {
           position: relative;
           width: 100%;
@@ -163,17 +155,15 @@ export default function ProductImageGallery({
         .pgal-main-img {
           width: 100%;
           height: 100%;
-          object-fit: contain;
-          padding: 18px;
+          object-fit: cover;
+          padding: 0;
           pointer-events: none;
-         
           -webkit-user-drag: none;
           transition: opacity 0.13s ease;
         }
         .pgal-main-img.fade-out { opacity: 0; }
         .pgal-main-img.clickable { cursor: zoom-in; }
 
-        /* dots */
         .pgal-dots {
           position: absolute;
           bottom: 10px;
@@ -198,7 +188,6 @@ export default function ProductImageGallery({
           transform: scale(1.35);
         }
 
-        /* zoom lens (desktop) */
         .pgal-lens {
           position: absolute;
           width: 100px;
@@ -221,11 +210,10 @@ export default function ProductImageGallery({
           inset: 0;
           width: 100%;
           height: 100%;
-          object-fit: contain;
-          padding: 18px;
+          object-fit: cover;
+          padding: 0;
         }
 
-        /* ── Thumbnail strip ── */
         .pgal-strip-wrap {
           position: relative;
           background: #f5f4f1;
@@ -275,7 +263,6 @@ export default function ProductImageGallery({
         }
         .pgal-thumb:active { transform: scale(0.96); }
 
-        /* ── Mobile zoom modal ── */
         .pgal-modal-bd {
           position: fixed;
           inset: 0;
@@ -317,7 +304,6 @@ export default function ProductImageGallery({
           font-size: 13px;
         }
 
-        /* ── Desktop layout ── */
         @media (min-width: 640px) {
           .pgal-root {
             flex-direction: row;
@@ -377,7 +363,6 @@ export default function ProductImageGallery({
       `}</style>
 
       <div className="pgal-root">
-        {/* Thumbnail strip */}
         {showThumbs && (
           <div className="pgal-strip-wrap">
             <div className="pgal-strip" ref={thumbStripRef}>
@@ -402,7 +387,6 @@ export default function ProductImageGallery({
           </div>
         )}
 
-        {/* Main preview */}
         <div
           ref={galleryRef || imageWrapperRef}
           className={`pgal-preview${isDesktop ? " desktop-zoom" : ""}${isDesktop && isZoomed ? " desktop-zoom-active" : ""}`}
@@ -426,7 +410,6 @@ export default function ProductImageGallery({
             unoptimized
           />
 
-          {/* Desktop zoom lens */}
           {isDesktop && isZoomed && (
             <>
               <div
@@ -441,7 +424,7 @@ export default function ProductImageGallery({
                   style={{
                     transform: `scale(2.5)`,
                     transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                    objectFit: "contain",
+                    objectFit: "cover",
                   }}
                   unoptimized
                 />
@@ -449,7 +432,6 @@ export default function ProductImageGallery({
             </>
           )}
 
-          {/* Dots (mobile only — hidden on desktop via CSS on strip) */}
           {showThumbs && (
             <div className="pgal-dots">
               {images.map((_, i) => (
@@ -466,7 +448,6 @@ export default function ProductImageGallery({
         </div>
       </div>
 
-      {/* Mobile full-screen zoom */}
       {mobileZoomImage && (
         <div className="pgal-modal-bd" onClick={() => setMobileZoomImage(null)}>
           <button

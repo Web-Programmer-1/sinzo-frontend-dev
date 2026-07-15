@@ -17,7 +17,6 @@ import {
   MoreVertical,
 } from "lucide-react";
 
-// Import updated hook
 import { useGetAllUsers } from "../../Apis/user/queries";
 import {
   useBlockUser,
@@ -44,14 +43,12 @@ type TUser = {
 };
 
 export default function CustomersManagementList() {
-  // --- State Management for Pagination & Search ---
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [searchEmail, setSearchEmail] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [openRoleDropdownId, setOpenRoleDropdownId] = useState<string | null>(null);
 
-  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchEmail);
@@ -60,20 +57,17 @@ export default function CustomersManagementList() {
     return () => clearTimeout(timer);
   }, [searchEmail]);
 
-  // --- Fetch Data with Params ---
   const { data, isLoading, isError, refetch } = useGetAllUsers({
     page,
     limit,
     email: debouncedSearch || undefined,
   });
 
-  // Mutations
   const { mutate: deleteUserMutation, isPending: isDeleting } = useDeleteUser();
   const { mutate: blockUserMutation, isPending: isBlocking } = useBlockUser();
   const { mutate: unblockUserMutation, isPending: isUnblocking } = useUnblockUser();
   const { mutate: updateUserMutation, isPending: isUpdatingUser } = useUpdateUser();
 
-  // Extract Data safely
   const users: TUser[] = data?.data || [];
   const totalUsers = data?.meta?.total || 0;
   const totalPages = Math.ceil(totalUsers / limit);
@@ -158,7 +152,6 @@ export default function CustomersManagementList() {
 
   const actionLoading = isDeleting || isBlocking || isUnblocking || isUpdatingUser;
 
-  // --- Handlers for Pagination ---
   const handleNextPage = () => {
     if (page < totalPages) setPage((prev) => prev + 1);
   };

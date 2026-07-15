@@ -80,7 +80,7 @@ export default function UpdateCategoryPage({ id }: Props) {
       toast.success(res?.message || "Category updated successfully");
 
       setTimeout(() => {
-        router.push("/dashboard/category/category-list"); // all category page route
+        router.push("/dashboard/category/category-list");
       }, 800);
     } catch (error: any) {
       const errorMessage =
@@ -226,8 +226,6 @@ export default function UpdateCategoryPage({ id }: Props) {
                 </div>
 
 
-
-
                               {/* Right Preview */}
           <div className="lg:col-span-5">
             <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -279,9 +277,6 @@ export default function UpdateCategoryPage({ id }: Props) {
               </div>
             </div>
           </div>
-
-
-
 
 
                 {/* Buttons */}

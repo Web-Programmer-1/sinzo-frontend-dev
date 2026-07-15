@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useRef, useState, useEffect } from "react"; // useState এবং useEffect ইমপোর্ট করুন
+import { useRef, useState, useEffect } from "react";
 import {
   Minus,
   Plus,
@@ -18,6 +18,7 @@ import {
   useRemoveCartItem,
   useUpdateCartItem,
 } from "../../Apis/cart";
+import { metaTracker } from "../../lib/meta/metaTracker";
 
 type TCartProduct = {
   id: string;
@@ -55,17 +56,26 @@ export default function CartPage() {
     useRemoveCartItem();
   const { mutate: clearMyCart, isPending: isClearingCart } = useClearMyCart();
 
-  // ১. লোকাল স্টেট তৈরি করুন
   const [localItems, setLocalItems] = useState<TCartItem[]>([]);
   const [localSummary, setLocalSummary] = useState<TCartSummary | undefined>(undefined);
 
   const checkoutSectionRef = useRef<HTMLDivElement>(null);
+  const initiatedCheckoutRef = useRef(false);
 
-  // ২. যখনই API থেকে ডেটা আসবে, স্টেট আপডেট করুন
   useEffect(() => {
     if (data) {
       setLocalItems(data.data.items);
       setLocalSummary(data.data.summary);
+
+      if (!initiatedCheckoutRef.current && data.data.items.length > 0) {
+        initiatedCheckoutRef.current = true;
+        metaTracker("InitiateCheckout", {
+          content_ids: data.data.items.map((item: any) => item.productId),
+          content_type: "product",
+          value: data.data.summary.subtotal,
+          currency: "BDT",
+        });
+      }
     }
   }, [data]);
 

@@ -150,7 +150,6 @@ const DashboardOverview = () => {
   });
 
 
-  console.log("Dashboard Data", data)
   const analytics = data?.data;
 
   const orderStatusData = useMemo(() => {

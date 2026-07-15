@@ -104,7 +104,6 @@ const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYY
     return deliveryArea === "INSIDE_CITY" ? 80 : 140;
   }, [deliveryArea]);
 
-  // Helper: Get or Create Guest ID for tracking drafts
   const getOrCreateGuestId = () => {
     if (typeof window === "undefined") return null;
     let guestId = localStorage.getItem(CHECKOUT_GUEST_ID_KEY);
@@ -136,7 +135,6 @@ const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYY
 
   useEffect(() => { latestValuesRef.current = watchedValues; }, [watchedValues]);
 
-  // --- 1. HYDRATION: Load from LocalStorage First (Fast) ---
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -157,7 +155,6 @@ const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYY
     }
   }, [reset]);
 
-  // --- 2. LOCAL SAVE: Save to LocalStorage only on change (No API) ---
   useEffect(() => {
     if (!isHydrated || typeof window === "undefined") return;
     try {
@@ -167,7 +164,6 @@ const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYY
     }
   }, [watchedValues, isHydrated]);
 
-  // --- 3. BACKEND SYNC: Only on Navigation (Cleanup Function) ---
   const syncDraftToBackend = async (values: TPlaceOrderFormValues) => {
     if (!hasDraftMeaningfulData(values)) return;
     
@@ -185,24 +181,20 @@ const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYY
         }
       }
     } catch (error) {
-      // Silent fail for background sync to avoid blocking navigation
       console.error("Background draft sync failed", error);
     }
   };
 
-  // Cleanup function: Triggers when component unmounts (Page Navigation)
   useEffect(() => {
     return () => {
       if (isSubmittingRef.current) return;
       const values = latestValuesRef.current;
       if (hasDraftMeaningfulData(values)) {
-        // Fire-and-forget: Don't await, just try to send
         syncDraftToBackend(values);
       }
     };
   }, [draftId]);
 
-  // Fallback: Browser Close/Refresh (Uses sendBeacon for reliability)
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isSubmittingRef.current) return;
@@ -211,8 +203,6 @@ const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYY
       if (hasDraftMeaningfulData(values)) {
         const payload = buildDraftPayload(values);
         const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
-        // Note: Ensure your backend has an endpoint that can handle this, 
-        // or rely on the cleanup function for internal navigation.
         navigator.sendBeacon("/api/checkout-draft/sync", blob); 
       }
     };

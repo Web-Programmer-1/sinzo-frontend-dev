@@ -1,32 +1,3 @@
-// import { useQuery } from "@tanstack/react-query";
-// import { getReviewsByProduct } from "./apis";
-// import { reviewKeys } from "./keys";
-// import { TGetReviewsParams } from "./types";
-
-// export const useGetReviewsByProduct = (
-//   productId: string,
-
-// ) => {
-//   return useQuery({
-//     queryKey: reviewKeys.list(productId),
-//     queryFn: () => getReviewsByProduct(productId),
-//     enabled: !!productId,
-//   });
-// };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 import { useQuery } from "@tanstack/react-query";
@@ -44,7 +15,6 @@ export const useGetReviewsByProduct = (
     enabled: !!productId,
   });
 };
-
 
 
 export const useRelatedProducts = (productId: string, limit = 8) => {

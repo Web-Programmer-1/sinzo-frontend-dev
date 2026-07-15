@@ -7,7 +7,6 @@ import { useLogoutUser } from "../../Apis/user/mutations";
 import { toast } from "sonner";
 import Image from "next/image";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
 type DropdownItem = {
   label: string;
   icon: React.ReactNode;
@@ -21,7 +20,6 @@ type NavItemType = {
   dropdown?: DropdownItem[];
 };
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
 const Icon = {
   Menu: () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -117,7 +115,6 @@ const Icon = {
   ),
 
 
-
   Bell: () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -139,9 +136,6 @@ const Icon = {
   ),
 
 
-
-
-
   Plus: () => (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -154,7 +148,6 @@ const Icon = {
   ),
 };
 
-// ── Nav Config — শুধু এখানে href বদলালেই হবে ─────────────────────────────────
 const NAV_ITEMS: NavItemType[] = [
   {
     icon: <Icon.Dashboard />,
@@ -238,7 +231,6 @@ const NAV_ITEMS: NavItemType[] = [
   },
 ];
 
-// ── Page Title Map ─────────────────────────────────────────────────────────────
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard Overview",
   "/dashboard/products": "Products",
@@ -250,7 +242,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/settings": "Settings",
 };
 
-// ── NavItem Component ─────────────────────────────────────────────────────────
 interface NavItemProps {
   item: NavItemType;
   collapsed: boolean;
@@ -269,7 +260,6 @@ function NavItem({ item, collapsed, onClose }: NavItemProps) {
   const active = "bg-black text-white shadow-lg shadow-gray-400";
   const inactive = "text-black hover:bg-slate-100 hover:text-slate-800";
 
-  // Dropdown variant
   if (item.dropdown) {
     return (
       <div>
@@ -312,7 +302,6 @@ function NavItem({ item, collapsed, onClose }: NavItemProps) {
     );
   }
 
-  // Regular Link variant
   return (
     <Link
       href={item.href!}
@@ -371,7 +360,6 @@ function Sidebar({ collapsed, mobile = false, onClose, user }: SidebarProps) {
             </Image>
           </Link>
    
-
 
         {mobile && (
           <button onClick={onClose} className="ml-auto p-1 rounded-lg text-slate-400 hover:bg-slate-100">
@@ -437,7 +425,6 @@ function Sidebar({ collapsed, mobile = false, onClose, user }: SidebarProps) {
   );
 }
 
-// ── Topbar Component ──────────────────────────────────────────────────────────
 interface TopbarProps {
   collapsed: boolean;
   onToggleSidebar: () => void;
@@ -547,7 +534,6 @@ function Topbar({ collapsed, onToggleSidebar, onOpenMobile }: TopbarProps) {
     </header>
   );
 }
-// ── Dashboard Layout ──────────────────────────────────────────────────────────
 export default function Dashboard({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);

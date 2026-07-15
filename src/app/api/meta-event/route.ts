@@ -15,7 +15,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🔥 Base payload
     const payload: any = {
       data: [
         {
@@ -38,9 +37,6 @@ export async function POST(req: Request) {
     };
 
 
-
-    
-    // 🔥 ONLY dev mode-এ test_event_code add হবে
     if (process.env.NODE_ENV === "development" && testCode) {
       payload.test_event_code = testCode;
     }

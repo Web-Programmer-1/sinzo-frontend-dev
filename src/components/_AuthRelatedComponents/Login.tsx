@@ -11,7 +11,7 @@ import { getMe } from "../../Apis/user/apis";
 import { userKeys } from "../../Apis/user/keys";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link"; // Import Next.js Link
+import Link from "next/link";
 
 type LoginFormValues = {
   email: string;
@@ -30,7 +30,6 @@ export default function LoginForm() {
 
   const redirect = searchParams.get("redirect");
   
-  // State for password visibility toggle
   const [showPassword, setShowPassword] = useState(false);
 
   const {

@@ -17,15 +17,10 @@ export const useGetDashboardOverview = (
 };
 
 
-
-
-
-
 export const useGetCustomarDashboardOverview = () => {
   return useQuery({
     queryKey: dashboardKeys.overview(),
     queryFn: fetchDashboardOverview,
-    // এখানে চাইলে staleTime বা অন্য কনফিগ দিতে পারো
-    staleTime: 5 * 60 * 1000, // ৫ মিনিট ক্যাশ থাকবে
+    staleTime: 5 * 60 * 1000,
   });
 };

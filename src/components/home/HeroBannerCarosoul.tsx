@@ -65,7 +65,6 @@ export default function HeroBannerCarousel() {
     setSliding(false);
   }, [total]);
 
-  // Auto-play
   useEffect(() => {
     if (paused || total <= 1) {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -79,7 +78,6 @@ export default function HeroBannerCarousel() {
     };
   }, [paused, goNext, total]);
 
-  // Touch/swipe support
   const touchStartX = useRef<number>(0);
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -91,7 +89,6 @@ export default function HeroBannerCarousel() {
     if (Math.abs(dx) > 40) dx < 0 ? goNext() : goPrev();
   };
 
-  // Keyboard support
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") goNext();

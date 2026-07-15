@@ -17,23 +17,6 @@ import ORDER_ENDPOINTS from "./endpoints";
 import { placeOrderMetaTracker } from "../../lib/meta/placeOrderMetaTracker";
 import { cartKeys } from "../cart";
 
-// export const usePlaceOrder = () => {
-//   const queryClient = useQueryClient();
-
-//   return useMutation({
-//     mutationFn: placeOrder,
-//     onSuccess: async () => {
-//       await queryClient.invalidateQueries({
-//         queryKey: orderKeys.myOrders(),
-//       });
-//     },
-//   });
-// };
-
-
-
-
-
 
 export const usePlaceOrder = () => {
   const queryClient = useQueryClient();
@@ -67,9 +50,6 @@ export const usePlaceOrder = () => {
     },
   });
 };
-
-
-
 
 
 export const useUpdateOrderStatus = () => {
@@ -109,8 +89,6 @@ export const useUpdatePaymentStatus = () => {
 };
 
 
-
-
 export const useDeleteOrder = () => {
   const queryClient = useQueryClient();
 
@@ -128,14 +106,6 @@ export const useDeleteOrder = () => {
     },
   });
 };
-
-
-
-
-
-
-
-
 
 
 export const updateOrderCustomerInfo = async (

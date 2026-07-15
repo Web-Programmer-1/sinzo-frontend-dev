@@ -43,7 +43,7 @@ export default function CustomerOrderUpdate({ order, onSuccess }: CustomerOrderU
       await updateOrderCustomerInfo(order.id, formData);
       setSuccess("Customer information updated successfully!");
       setIsEditing(false);
-      onSuccess?.(); // Parent কে নোটিফাই করুন যাতে ডেটা রিফ্রেশ হয়
+      onSuccess?.();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to update customer info");
     } finally {
@@ -51,7 +51,6 @@ export default function CustomerOrderUpdate({ order, onSuccess }: CustomerOrderU
     }
   };
 
-// যখন isEditing === false, তখন যে বাটনটি রেন্ডার হয়:
 
 if (!isEditing) {
   return (

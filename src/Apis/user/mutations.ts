@@ -10,21 +10,18 @@ import {
 } from "./apis";
 import { userKeys } from "./keys";
 
-// register
 export const useRegisterUser = () => {
   return useMutation({
     mutationFn: registerUser,
   });
 };
 
-// login
 export const useLoginUser = () => {
   return useMutation({
     mutationFn: loginUser,
   });
 };
 
-// update
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
@@ -41,7 +38,6 @@ export const useUpdateUser = () => {
   });
 };
 
-// delete
 export const useDeleteUser = () => {
   const queryClient = useQueryClient();
 
@@ -53,7 +49,6 @@ export const useDeleteUser = () => {
   });
 };
 
-// block
 export const useBlockUser = () => {
   const queryClient = useQueryClient();
 
@@ -65,7 +60,6 @@ export const useBlockUser = () => {
   });
 };
 
-// unblock
 export const useUnblockUser = () => {
   const queryClient = useQueryClient();
 

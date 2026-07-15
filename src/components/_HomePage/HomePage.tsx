@@ -1,9 +1,7 @@
 
 import UserSideProductsPage from '../../app/(user)/product/page'
-import UserSideCustomarRanking from '../_Products/UserSideCustomarRanking'
 
 import HeroBannerCarousel from '../home/HeroBannerCarosoul'
-// import CreateProduct from '../_Products/CreateProducts'
 
 export default function HomePage() {
 
@@ -18,10 +16,6 @@ export default function HomePage() {
         
       <UserSideProductsPage></UserSideProductsPage>
    
-     </div>
-
-     <div>
-      <UserSideCustomarRanking></UserSideCustomarRanking>
      </div>
     
     </div>

@@ -1,13 +1,13 @@
 import { Metadata } from "next";
 import Providers from "./providers";
-import { Poppins } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import MetaPixel from "../components/meta/metaPixel";
 
-const poppins = Poppins({
+const roboto = Roboto({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-poppins",
+  weight: ["100", "300", "400", "500", "700", "900"],
+  variable: "--font-roboto",
 });
 
 export const metadata: Metadata = {
@@ -77,7 +77,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={poppins.className} suppressHydrationWarning>
+      <body className={`${roboto.className} ${roboto.variable}`} suppressHydrationWarning>
         <Providers>{children}</Providers>
         <MetaPixel />
       </body>

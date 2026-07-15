@@ -63,7 +63,7 @@ export default function CreateCategoryForm() {
 
          
     setTimeout(() => {
-      router.push("/dashboard/category/category-list"); // all category page route
+      router.push("/dashboard/category/category-list");
     }, 800);
 
     } catch (error: any) {
@@ -152,9 +152,6 @@ export default function CreateCategoryForm() {
                 </div>
 
 
-
-
-
                               {/* Right Side */}
           <div className="lg:col-span-5">
             <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -208,11 +205,6 @@ export default function CreateCategoryForm() {
               </div>
             </div>
           </div>
-
-
-
-
-
 
 
                 {/* Buttons */}

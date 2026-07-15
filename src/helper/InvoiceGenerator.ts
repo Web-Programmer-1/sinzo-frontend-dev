@@ -9,7 +9,6 @@ export const downloadInvoicePDF = async (orderId: string) => {
       },
     });
 
-    // Create blob link to download
     const blob = new Blob([response.data], { type: "application/pdf" });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -28,11 +27,9 @@ export const downloadInvoicePDF = async (orderId: string) => {
     
     link.setAttribute("download", filename);
     
-    // Trigger download
     document.body.appendChild(link);
     link.click();
     
-    // Cleanup
     link.parentNode?.removeChild(link);
     window.URL.revokeObjectURL(url);
     
@@ -41,7 +38,6 @@ export const downloadInvoicePDF = async (orderId: string) => {
   } catch (error: any) {
     console.error("Invoice download error:", error);
     
-    // Axios error handling for better debugging
     if (error.response?.status === 404) {
       throw new Error("Invoice not found for this order");
     }

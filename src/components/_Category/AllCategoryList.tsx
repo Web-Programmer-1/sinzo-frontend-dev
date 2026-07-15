@@ -7,7 +7,6 @@ import { useGetAllCategories } from "../../Apis/category/queries";
 import { useDeleteCategory } from "../../Apis/category/mutation";
 import Swal from "sweetalert2";
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
 const PlusIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -24,7 +23,6 @@ const CopyIcon = () => (
     />
   </svg>
 );
-
 
 
 const EditIcon = () => (
@@ -59,7 +57,6 @@ const CategoryIcon = () => (
   </svg>
 );
 
-// ── Types ─────────────────────────────────────────────────────────────────────
 interface Category {
   id: string | number;
   title: string;
@@ -68,7 +65,6 @@ interface Category {
   productCount?: number;
 }
 
-// ── Skeleton Card ─────────────────────────────────────────────────────────────
 function SkeletonItem() {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm animate-pulse">
@@ -88,7 +84,6 @@ function SkeletonItem() {
   );
 }
 
-// ── Category Item ─────────────────────────────────────────────────────────────
 interface CategoryItemProps {
   category: Category;
   onDelete: (id: string | number) => void;
@@ -110,8 +105,6 @@ function CategoryItem({ category, onDelete, deletingId }: CategoryItemProps) {
       toast.error("Failed to copy URL");
     }
   };
-
-
 
 
   return (
@@ -145,13 +138,8 @@ function CategoryItem({ category, onDelete, deletingId }: CategoryItemProps) {
         </div>
 
 
-
         {/* Right */}
         <div className="grid grid-cols-3 gap-3 sm:flex sm:items-center sm:justify-end sm:w-auto w-full">
-
-
-
-
 
 
           <button
@@ -162,8 +150,6 @@ function CategoryItem({ category, onDelete, deletingId }: CategoryItemProps) {
             <CopyIcon />
             Copy
           </button>
-
-
 
 
           <Link
@@ -217,7 +203,6 @@ function CategoryItem({ category, onDelete, deletingId }: CategoryItemProps) {
   );
 }
 
-// ── Empty State ───────────────────────────────────────────────────────────────
 function EmptyState() {
   return (
     <div className="rounded-3xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
@@ -241,7 +226,6 @@ function EmptyState() {
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
 export default function AllCategoryList() {
   const { data, isLoading, isError } = useGetAllCategories();
   const { mutateAsync: deleteCategory, isPending: isDeletePending } = useDeleteCategory();
@@ -271,7 +255,6 @@ export default function AllCategoryList() {
 
       const res = await deleteCategory(String(id));
 
-      // ✅ Sonner success toast
       toast.success(res?.message || "Category deleted successfully");
     } catch (error: any) {
       const errorMessage =
@@ -279,7 +262,6 @@ export default function AllCategoryList() {
         error?.message ||
         "Failed to delete category";
 
-      // ❌ Sonner error toast
       toast.error(errorMessage);
     } finally {
       setDeletingId(null);

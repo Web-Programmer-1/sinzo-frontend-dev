@@ -174,8 +174,8 @@ const handleDelete = (id: string) => {
     text: "This action cannot be undone.",
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#0f172a", // slate-900
-    cancelButtonColor: "#e2e8f0",  // slate-200
+    confirmButtonColor: "#0f172a",
+    cancelButtonColor: "#e2e8f0",
     confirmButtonText: "Yes, delete it",
     cancelButtonText: "Cancel",
     reverseButtons: true,

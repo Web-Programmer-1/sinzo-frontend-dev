@@ -36,7 +36,6 @@ const DownloadInvoiceButton = ({
     }
   };
 
-  // Styles (আপনার ডিজাইন অনুযায়ী)
   const baseStyles = "inline-flex items-center justify-center rounded-2xl font-semibold transition hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100";
   
   const variants = {

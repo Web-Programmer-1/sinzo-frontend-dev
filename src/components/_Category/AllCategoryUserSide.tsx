@@ -28,7 +28,6 @@ function CategorySlider({ categories }: { categories: Category[] }) {
   const [index, setIndex] = useState(0);
   const autoRef  = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // drag state — refs so no re-render during move
   const dragging = useRef(false);
   const startX   = useRef(0);
   const [offset, setOffset] = useState(0);
@@ -36,7 +35,6 @@ function CategorySlider({ categories }: { categories: Category[] }) {
   const CARD_W = 105;
   const GAP    = 8;
 
-  // ── helpers ──────────────────────────────────
   const clamp = useCallback((i: number) => Math.max(0, Math.min(i, total - 1)), [total]);
 
   const goTo = useCallback((i: number) => {
@@ -47,7 +45,6 @@ function CategorySlider({ categories }: { categories: Category[] }) {
   const next = useCallback(() => goTo(index + 1 < total ? index + 1 : 0), [goTo, index, total]);
   const prev = useCallback(() => goTo(index - 1 >= 0 ? index - 1 : total - 1), [goTo, index, total]);
 
-  // ── auto-slide ────────────────────────────────
   const startAuto = useCallback(() => {
     if (autoRef.current) clearInterval(autoRef.current);
     autoRef.current = setInterval(next, 2800);
@@ -59,7 +56,6 @@ function CategorySlider({ categories }: { categories: Category[] }) {
     return () => { if (autoRef.current) clearInterval(autoRef.current); };
   }, [startAuto, total]);
 
-  // ── Pointer events (mouse + touch unified) ──
   const onPointerDown = (e: React.PointerEvent) => {
     dragging.current = true;
     startX.current   = e.clientX;
@@ -261,7 +257,7 @@ const S: Record<string, React.CSSProperties> = {
   viewport: {
     overflow: "hidden",
     cursor: "grab",
-    touchAction: "pan-y", // ← lets vertical scroll work, captures horizontal drag
+    touchAction: "pan-y",
   },
   track: {
     display: "flex",

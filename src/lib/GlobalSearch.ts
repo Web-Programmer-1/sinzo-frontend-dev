@@ -18,7 +18,6 @@ export const useGlobalProductSearch = () => {
 
   const trimmedQuery = query.trim();
   const shouldSearch = trimmedQuery.length >= 2;
-// global
   const params = useMemo(
     () => ({
       searchTerm: trimmedQuery,

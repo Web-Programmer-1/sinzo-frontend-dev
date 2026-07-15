@@ -27,6 +27,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/" },
   { label: "Shop", href: "/product" },
+  { label: "Customer Ranking", href: "/customer-ranking" },
   { label: "About Us", href: "/about" },
   { label: "Contact Us", href: "/contact" },
 ];
@@ -275,6 +276,23 @@ export default function Navbar() {
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
           gap: 1rem;
+        }
+
+        @media (min-width: 1024px) {
+          .zaman-nav__inner {
+            grid-template-columns: auto 1fr auto;
+            gap: 2rem;
+          }
+          .zaman-nav__logo-link {
+            order: 1;
+          }
+          .zaman-nav__left {
+            order: 2;
+            justify-content: center;
+          }
+          .zaman-nav__actions {
+            order: 3;
+          }
         }
 
         .zaman-nav__links {
@@ -907,7 +925,7 @@ export default function Navbar() {
             </ul>
           </div>
 
-          <Link href="/">
+          <Link href="/" className="zaman-nav__logo-link">
             <div style={{ height: "60px", display: "flex", alignItems: "center" }}>
               <Image
                 src={logoUrl || "/bg-remove-logo.png"}

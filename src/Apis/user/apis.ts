@@ -2,7 +2,6 @@
 import { apiClient } from "../../lib/axios/apiClient";
 import { userEndpoints } from "./endpoints";
 
-// auth
 export const registerUser = (data: any) =>
   apiClient.post(userEndpoints.register, data);
 
@@ -18,15 +17,10 @@ export const logoutUser = async () => {
   return data;
 };
 
-// user
 export const getMe = async () => {
   const res = await apiClient.get("/users/me");
   return res.data;
 };
-
-// export const getAllUsers = () =>
-//   apiClient.get(userEndpoints.getAll);
-
 
 
 export const getAllUsers = async (params: {
@@ -37,8 +31,6 @@ export const getAllUsers = async (params: {
   const { data } = await apiClient.get("/users", { params });
   return data;
 };
-
-
 
 
 export const getUserById = (id: string) =>

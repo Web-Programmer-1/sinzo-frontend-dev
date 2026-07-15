@@ -1,4 +1,4 @@
-type MetaEventName = "AddToCart";
+type MetaEventName = "AddToCart" | "InitiateCheckout";
 
 type MetaEventData = {
   content_ids?: string[];

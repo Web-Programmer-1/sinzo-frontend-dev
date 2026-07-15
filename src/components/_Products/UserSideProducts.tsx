@@ -7,8 +7,6 @@ import Image from "next/image";
 
 import { useGetAllCategories } from "../../Apis/category/queries";
 import { useGetAllProducts } from "../../Apis/products/queries";
-import { useAddToCart, useGetMyCart } from "../../Apis/cart";
-import { toast } from "sonner";
 
 export default function UserSideProducts() {
   return (
@@ -18,9 +16,6 @@ export default function UserSideProducts() {
   );
 }
 
-/* ══════════════════════════════════════════════════════
-   Types
-══════════════════════════════════════════════════════ */
 interface Category {
   id: string;
   title: string;
@@ -41,54 +36,36 @@ interface Product {
 interface Meta { page: number; limit: number; total: number; }
 type TColorOption = { value: string; hex: string; border?: string; };
 
-/* ══════════════════════════════════════════════════════
-   Constants (moved outside component to avoid recreation)
-══════════════════════════════════════════════════════ */
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
 
 const COLORS: TColorOption[] = [
   { value: "Black", hex: "#111111", border: "#111111" },
   { value: "White", hex: "#ffffff", border: "#d1d5db" },
-  { value: "Blue",  hex: "#2563eb", border: "#2563eb" },
-  { value: "Red",   hex: "#ef4444", border: "#ef4444" },
+  { value: "Blue", hex: "#2563eb", border: "#2563eb" },
+  { value: "Red", hex: "#ef4444", border: "#ef4444" },
   { value: "Green", hex: "#22c55e", border: "#22c55e" },
-  { value: "Grey",  hex: "#9ca3af", border: "#9ca3af" },
+  { value: "Grey", hex: "#9ca3af", border: "#9ca3af" },
   { value: "Brown", hex: "#8b5e3c", border: "#8b5e3c" },
-  { value: "Navy",  hex: "#1e3a8a", border: "#1e3a8a" },
+  { value: "Navy", hex: "#1e3a8a", border: "#1e3a8a" },
 ];
 
 const SORT_OPTIONS = [
-  { value: "",            label: "Default" },
-  { value: "oldest",      label: "Oldest First" },
-  { value: "price_asc",  label: "Price: Low → High" },
+  { value: "", label: "Default" },
+  { value: "oldest", label: "Oldest First" },
+  { value: "price_asc", label: "Price: Low → High" },
   { value: "price_high", label: "Price: High → Low" },
 ] as const;
 
 const ALL_CAT_ID = "__all__";
 
-/* ══════════════════════════════════════════════════════
-   Pagination helper
-══════════════════════════════════════════════════════ */
-function buildPageNums(total: number, cur: number): (number | "...")[] {
-  const arr: (number | "...")[] = [];
-  for (let i = 1; i <= total; i++) {
-    if (i === 1 || i === total || Math.abs(i - cur) <= 1) arr.push(i);
-    else if (arr[arr.length - 1] !== "...") arr.push("...");
-  }
-  return arr;
-}
-
-/* ══════════════════════════════════════════════════════
-   Filter state hook — keeps ProductsPage lean
-══════════════════════════════════════════════════════ */
 function useFilters(searchParams: ReturnType<typeof useSearchParams>) {
   const [categoryId, setCategoryId] = useState(searchParams.get("categoryId") || "");
-  const [minPrice,   setMinPrice]   = useState(searchParams.get("minPrice")   || "");
-  const [maxPrice,   setMaxPrice]   = useState(searchParams.get("maxPrice")   || "");
-  const [size,       setSize]       = useState(searchParams.get("size")       || "");
-  const [color,      setColor]      = useState(searchParams.get("color")      || "");
-  const [sort,       setSort]       = useState(searchParams.get("sort")       || "");
-  const [page,       setPage]       = useState(Number(searchParams.get("page")) || 1);
+  const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
+  const [size, setSize] = useState(searchParams.get("size") || "");
+  const [color, setColor] = useState(searchParams.get("color") || "");
+  const [sort, setSort] = useState(searchParams.get("sort") || "");
+  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
 
   const clearAll = useCallback(() => {
     setCategoryId(""); setMinPrice(""); setMaxPrice("");
@@ -97,11 +74,11 @@ function useFilters(searchParams: ReturnType<typeof useSearchParams>) {
 
   const params = {
     ...(categoryId && { categoryId }),
-    ...(minPrice   && { minPrice }),
-    ...(maxPrice   && { maxPrice }),
-    ...(size       && { size }),
-    ...(color      && { color }),
-    ...(sort       && { sort }),
+    ...(minPrice && { minPrice }),
+    ...(maxPrice && { maxPrice }),
+    ...(size && { size }),
+    ...(color && { color }),
+    ...(sort && { sort }),
     page,
     limit: 12,
   };
@@ -120,9 +97,6 @@ function useFilters(searchParams: ReturnType<typeof useSearchParams>) {
   };
 }
 
-/* ══════════════════════════════════════════════════════
-   Main Page
-══════════════════════════════════════════════════════ */
 function ProductsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -142,16 +116,70 @@ function ProductsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [draft, setDraft] = useState({ minPrice, maxPrice, size, color, sort });
 
-  const { data: cartData, refetch: refetchCart } = useGetMyCart();
+  const [accumulatedProducts, setAccumulatedProducts] = useState<Product[]>([]);
+  const observerRef = useRef<HTMLDivElement>(null);
+
   const { data: catData } = useGetAllCategories();
-  const { data: prodData, isLoading, isError } = useGetAllProducts(params as any);
+  const { data: prodData, isLoading, isError, isFetching } = useGetAllProducts(params as any);
 
   const categories: Category[] = catData?.data ?? [];
-  const products: Product[]   = (prodData?.data as Product[]) ?? [];
   const meta: Meta             = prodData?.meta ?? { page: 1, limit: 12, total: 0 };
   const totalPages             = Math.ceil(meta.total / meta.limit);
 
   const activeCatName = categories.find((c) => c.id === categoryId)?.title;
+
+  const currentParamsStr = JSON.stringify({
+    categoryId,
+    minPrice,
+    maxPrice,
+    size,
+    color,
+    sort,
+  });
+
+  useEffect(() => {
+    setAccumulatedProducts([]);
+    setPage(1);
+  }, [currentParamsStr, setPage]);
+
+  useEffect(() => {
+    if (prodData?.data) {
+      const newProducts = prodData.data as Product[];
+      setAccumulatedProducts((prev) => {
+        if (page === 1) {
+          return newProducts;
+        }
+        const existingIds = new Set(prev.map((p) => p.id));
+        const filtered = newProducts.filter((p) => !existingIds.has(p.id));
+        return [...prev, ...filtered];
+      });
+    }
+  }, [prodData, page]);
+
+  useEffect(() => {
+    if (isLoading || isFetching) return;
+    if (page >= totalPages) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1, rootMargin: "100px" }
+    );
+
+    const currentObserverRef = observerRef.current;
+    if (currentObserverRef) {
+      observer.observe(currentObserverRef);
+    }
+
+    return () => {
+      if (currentObserverRef) {
+        observer.unobserve(currentObserverRef);
+      }
+    };
+  }, [isLoading, isFetching, page, totalPages, setPage]);
 
   const handleCatSelect = useCallback((id: string) => {
     setCategoryId(id);
@@ -180,15 +208,11 @@ function ProductsPage() {
     router.push("/");
   }, [clearAll, router]);
 
-  const handleAddedToCart = useCallback(async () => {
-    await refetchCart();
-  }, [refetchCart]);
-
   return (
     <>
       <style>{GLOBAL_CSS}</style>
 
-      {/* Mobile category slider */}
+      {}
       <div className="pp-mobile-cat">
         <CategorySlider
           categories={categories}
@@ -199,7 +223,7 @@ function ProductsPage() {
       </div>
 
       <div className="pp-root">
-        {/* Desktop sidebar */}
+        {}
         <aside className="pp-sidebar">
           <p className="sidebar-title">Filters</p>
           <FilterPanel
@@ -223,9 +247,9 @@ function ProductsPage() {
           />
         </aside>
 
-        {/* Main */}
+        {}
         <main className="pp-main">
-          {/* Top bar */}
+          {}
           <div className="pp-topbar">
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button className="pp-mobile-filter-btn filter-btn" onClick={openDrawer}>
@@ -251,54 +275,50 @@ function ProductsPage() {
             </div>
           </div>
 
-          {/* Active filter chips */}
+          {}
           {activeCount > 0 && (
             <div className="active-chips">
               {minPrice && <Tag label={`Min ৳${minPrice}`} onX={() => setMinPrice("")} />}
               {maxPrice && <Tag label={`Max ৳${maxPrice}`} onX={() => setMaxPrice("")} />}
-              {size     && <Tag label={`Size: ${size}`}    onX={() => setSize("")} />}
-              {color    && <Tag label={`Color: ${color}`}  onX={() => setColor("")} />}
-              {sort     && <Tag label={SORT_OPTIONS.find((o) => o.value === sort)?.label || sort} onX={() => setSort("")} />}
+              {size && <Tag label={`Size: ${size}`} onX={() => setSize("")} />}
+              {color && <Tag label={`Color: ${color}`} onX={() => setColor("")} />}
+              {sort && <Tag label={SORT_OPTIONS.find((o) => o.value === sort)?.label || sort} onX={() => setSort("")} />}
             </div>
           )}
 
-          {/* Grid */}
-          {isLoading ? (
+          {}
+          {isLoading && page === 1 ? (
             <div className="pp-grid">
               {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
           ) : isError ? (
             <EmptyState text="Failed to load products." />
-          ) : products.length === 0 ? (
+          ) : accumulatedProducts.length === 0 ? (
             <EmptyState text="No products found.">
               <button className="clear-btn" onClick={handleClearAll}>Clear Filters</button>
             </EmptyState>
           ) : (
-            <div className="pp-grid">
-              {products.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} onAddedToCart={handleAddedToCart} />
-              ))}
-            </div>
-          )}
+            <>
+              <div className="pp-grid">
+                {accumulatedProducts.map((p, i) => (
+                  <ProductCard key={p.id} product={p} index={i} />
+                ))}
+              </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="pg-wrap">
-              <PgBtn disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>← Prev</PgBtn>
-              {buildPageNums(totalPages, page).map((n, i) =>
-                n === "..." ? (
-                  <span key={`e${i}`} className="pg-ellipsis">…</span>
-                ) : (
-                  <PgBtn key={n} active={page === n} onClick={() => setPage(n as number)}>{n}</PgBtn>
-                )
-              )}
-              <PgBtn disabled={page === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Next →</PgBtn>
-            </div>
+              <div ref={observerRef} className="infinite-scroll-trigger">
+                {isFetching && page > 1 && (
+                  <div className="infinite-scroll-loader">
+                    <span className="spinner"></span>
+                    <p>Loading more products...</p>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </main>
       </div>
 
-      {/* Mobile Filter Drawer — single instance */}
+      {}
       {drawerOpen && (
         <div className="drawer-backdrop" onClick={() => setDrawerOpen(false)}>
           <div className="drawer" onClick={(e) => e.stopPropagation()}>
@@ -329,9 +349,6 @@ function ProductsPage() {
   );
 }
 
-/* ══════════════════════════════════════════════════════
-   Filter Panel — memoized, shared by sidebar + drawer
-══════════════════════════════════════════════════════ */
 const FilterPanel = memo(function FilterPanel({
   isDraft = false,
   categories,
@@ -354,7 +371,7 @@ const FilterPanel = memo(function FilterPanel({
 }) {
   return (
     <div className="filter-body">
-      {/* Categories */}
+      {}
       <div className="filter-section">
         <CatBtn active={!categoryId} onClick={() => onCategorySelect("")}>All Products</CatBtn>
         {categories.map((c) => (
@@ -364,7 +381,7 @@ const FilterPanel = memo(function FilterPanel({
         ))}
       </div>
 
-      {/* Sort */}
+      {}
       <div className="filter-section">
         <p className="filter-label">Sort By</p>
         {SORT_OPTIONS.map((o) => (
@@ -374,7 +391,7 @@ const FilterPanel = memo(function FilterPanel({
         ))}
       </div>
 
-      {/* Price */}
+      {}
       <div className="filter-section">
         <p className="filter-label">Price Range (৳)</p>
         <div style={{ display: "flex", gap: 8 }}>
@@ -391,7 +408,7 @@ const FilterPanel = memo(function FilterPanel({
         </div>
       </div>
 
-      {/* Size */}
+      {}
       <div className="filter-section">
         <p className="filter-label">Size</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -401,7 +418,7 @@ const FilterPanel = memo(function FilterPanel({
         </div>
       </div>
 
-      {/* Color */}
+      {}
       <div className="filter-section">
         <p className="filter-label">Color</p>
         <div className="color-wrap">
@@ -424,9 +441,6 @@ const FilterPanel = memo(function FilterPanel({
   );
 });
 
-/* ══════════════════════════════════════════════════════
-   Category Slider
-══════════════════════════════════════════════════════ */
 const CategorySlider = memo(function CategorySlider({
   categories, activeCatId, onSelect, showAllCard = false,
 }: {
@@ -441,10 +455,10 @@ const CategorySlider = memo(function CategorySlider({
 
   const [index, setIndex] = useState(0);
   const [offset, setOffset] = useState(0);
-  const autoRef   = useRef<ReturnType<typeof setInterval> | null>(null);
-  const dragging  = useRef(false);
-  const startX    = useRef(0);
-  const moved     = useRef(false);
+  const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const dragging = useRef(false);
+  const startX = useRef(0);
+  const moved = useRef(false);
 
   const CARD_W = 105, GAP = 8;
 
@@ -469,8 +483,8 @@ const CategorySlider = memo(function CategorySlider({
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     dragging.current = true;
-    moved.current    = false;
-    startX.current   = e.clientX;
+    moved.current = false;
+    startX.current = e.clientX;
     setOffset(0);
     if (autoRef.current) clearInterval(autoRef.current);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -492,10 +506,9 @@ const CategorySlider = memo(function CategorySlider({
       return 0;
     });
     startAuto();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [next, prev, startAuto]);
 
-  // named to avoid shadowing
   const prev_fn = prev;
 
   const handleCardClick = useCallback((cat: Category) => {
@@ -578,67 +591,49 @@ const CategorySlider = memo(function CategorySlider({
   );
 });
 
-/* ══════════════════════════════════════════════════════
-   Product Card — memoized
-══════════════════════════════════════════════════════ */
 const ProductCard = memo(function ProductCard({
-  product, index, onAddedToCart,
+  product, index,
 }: {
   product: Product;
   index: number;
-  onAddedToCart: () => void | Promise<void>;
 }) {
   const [hov, setHov] = useState(false);
   const soldOut = product.stock === 0;
   const router  = useRouter();
-  const { mutate: addToCart, isPending } = useAddToCart();
 
   const handleDetailsNavigate = useCallback(() => router.push(`/product/${product.slug}`), [router, product.slug]);
 
-  const handleBuyNow = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!soldOut) router.push(`/product/${product.slug}`);
-  }, [soldOut, router, product.slug]);
+  const showSale = product.badge === "SALE";
+  const originalPrice = showSale ? Math.round((product.price * 1.15) / 100) * 100 : null;
 
-  const handleAddToCart = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (soldOut || isPending) return;
-    addToCart(
-      { productId: product.id, quantity: 1 },
-      {
-        onSuccess: async (res: any) => {
-          toast.success(res?.message || "Added to cart");
-          await onAddedToCart();
-        },
-        onError: (err: any) => {
-          toast.error(err?.response?.data?.message || "Failed to add to cart");
-        },
-      }
-    );
-  }, [soldOut, isPending, addToCart, product.id, onAddedToCart]);
-
-  const shortTitle = product.title.split(" ").slice(0, 3).join(" ") +
-    (product.title.split(" ").length > 3 ? "..." : "");
-  const shortCardTitle = product.cardShortTitle?.length > 25
-    ? product.cardShortTitle.slice(0, 25) + "..."
-    : product.cardShortTitle;
+  const formatBadge = (badge: string) => {
+    if (badge === "BEST_SELLER") return "Best Seller";
+    if (badge === "LOW_STOCK") return "Low Stock";
+    if (badge === "OUT_OF_STOCK") return "Out of Stock";
+    return badge.charAt(0).toUpperCase() + badge.slice(1).toLowerCase();
+  };
 
   return (
     <div
       className="pp-card"
-      style={{ animationDelay: `${index * 45}ms`, boxShadow: "0 12px 30px rgba(0,0,0,0.14), 0 4px 10px rgba(0,0,0,0.11)" }}
+      style={{ animationDelay: `${index * 45}ms` }}
       onClick={handleDetailsNavigate}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
       <div className="card-img-wrap">
+        {product.badge && (
+          <div className="card-badge">
+            {formatBadge(product.badge)}
+          </div>
+        )}
         {product.productCardImage ? (
           <Image
             src={product.productCardImage}
             alt={product.title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className={`card-img${hov ? " card-img-hov" : ""}`}
+            className="card-img"
           />
         ) : (
           <div className="card-img-fallback">
@@ -650,27 +645,27 @@ const ProductCard = memo(function ProductCard({
           </div>
         )}
         {soldOut && <div className="card-dim-overlay" />}
+        <div className="card-hover-overlay">
+          <span>SHOW DETAILS</span>
+        </div>
       </div>
 
       <div className="card-info">
-        <p className="card-title">{shortTitle}</p>
-        {shortCardTitle && <span className="card-cat-tag">{shortCardTitle}</span>}
+        <p className="card-title">{product.title}</p>
+        {product.category?.title && (
+          <span className="card-cat-tag">{product.category.title}</span>
+        )}
         <div className="card-price-row">
-          <span className="card-price">৳ {product.price.toLocaleString()}</span>
-        </div>
-        <div className="card-actions">
-          <button onClick={handleBuyNow} className="buy-btn" disabled={soldOut} style={{ opacity: soldOut ? 0.45 : 1 }}>
-            Buy Now
-          </button>
+          {showSale && originalPrice && (
+            <span className="card-price-original">Tk {originalPrice.toLocaleString()}</span>
+          )}
+          <span className="card-price">Tk {product.price.toLocaleString()}</span>
         </div>
       </div>
     </div>
   );
 });
 
-/* ══════════════════════════════════════════════════════
-   Small reusable helpers
-══════════════════════════════════════════════════════ */
 const FilterIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
     <line x1="4" y1="6" x2="20" y2="6" />
@@ -719,13 +714,6 @@ const Tag = memo(({ label, onX }: { label: string; onX: () => void }) => (
 ));
 Tag.displayName = "Tag";
 
-const PgBtn = memo(({ active, disabled, onClick, children }: { active?: boolean; disabled?: boolean; onClick: () => void; children: React.ReactNode }) => (
-  <button onClick={onClick} disabled={disabled} className={`pg-btn${active ? " pg-btn-active" : ""}${disabled ? " pg-btn-disabled" : ""}`}>
-    {children}
-  </button>
-));
-PgBtn.displayName = "PgBtn";
-
 const EmptyState = ({ text, children }: { text: string; children?: React.ReactNode }) => (
   <div className="empty-state">
     <p className="empty-text">{text}</p>
@@ -744,9 +732,6 @@ const SkeletonCard = () => (
   </div>
 );
 
-/* ══════════════════════════════════════════════════════
-   Global CSS — all styles in one place, zero inline style objects at render time
-══════════════════════════════════════════════════════ */
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500&display=swap');
 
@@ -755,7 +740,6 @@ const GLOBAL_CSS = `
   @keyframes fadeUp       { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes shimmerAnim  { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-  /* ── Layout ── */
   .pp-mobile-cat { display: block; }
   .pp-root {
     display: flex; gap: 24px;
@@ -768,43 +752,126 @@ const GLOBAL_CSS = `
   .pp-main    { flex: 1; min-width: 0; }
   .pp-topbar  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
 
-  /* ── Grid ── */
   .pp-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
-  @media (min-width: 640px)  { .pp-grid { grid-template-columns: repeat(3,1fr); gap: 14px; } }
-  @media (min-width: 1024px) { .pp-grid { grid-template-columns: repeat(4,1fr); gap: 16px; } }
+  @media (min-width: 640px)  { .pp-grid { grid-template-columns: repeat(2,1fr); gap: 14px; } }
+  @media (min-width: 1024px) { .pp-grid { grid-template-columns: repeat(3,1fr); gap: 20px; } }
 
-  /* ── Card ── */
   .pp-card {
-    background: #fff; border-radius: 12px; overflow: hidden;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
-    transition: transform .28s ease, box-shadow .28s ease;
+    background: transparent;
+    border: 1.5px solid transparent;
+    border-radius: 20px;
+    padding: 4px;
+    overflow: hidden;
+    transition: border-color 0.25s ease;
     animation: fadeUp .35s ease both;
     cursor: pointer;
+    position: relative;
   }
-  .pp-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.05); }
-  .card-img-wrap { position: relative; aspect-ratio: 3/4; overflow: hidden; background: #f2f2f2; }
-  .card-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s ease; pointer-events: none; }
-  .card-img-hov  { transform: scale(1.06); }
-  .card-img-fallback { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f5f5f5; }
-  .card-dim-overlay  { position:absolute; inset:0; background:rgba(255,255,255,0.35); }
-  .card-info { padding: 12px 11px; background:#fff; position:relative; z-index:2; box-shadow: 0 -12px 25px rgba(0,0,0,0.15); }
-  .card-title { margin:0 0 6px; font-size:1.10rem; font-weight:900; color:#111; display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; }
-  .card-cat-tag { display:inline-block; font-size:0.75rem; padding:3px 7px; font-weight:600; letter-spacing:0.05em; color:black; opacity:0.6; margin-bottom:3px; }
-  .card-price-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
-  .card-price { font-family:sans-serif; font-weight:600; font-size:0.95rem; color:#111; }
-  .card-actions { display:flex; align-items:center; gap:8px; width:100%; font-weight:700; }
-  .buy-btn {
-    flex:1; min-width:0; height:35px;
-    border: 1px solid rgba(255,255,255,0.08); border-radius:10px;
-    background: linear-gradient(180deg,#1f1f1f 0%,#0a0a0a 100%);
-    color:#fff; font-size:0.60rem; font-weight:700; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.10);
-    transition: all 0.25s ease;
+  .pp-card:hover {
+    border-color: #111;
   }
-  .buy-btn:disabled { cursor:not-allowed; }
+  .card-img-wrap { position: relative; aspect-ratio: 1/1.25; overflow: hidden; background: #fff; border-radius: 16px; }
+  .card-img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; border-radius: 16px; }
+  .card-img-fallback { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius: 16px; }
+  .card-dim-overlay  { position:absolute; inset:0; background:rgba(255,255,255,0.35); z-index: 2; border-radius: 16px; }
+  .card-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+    z-index: 3;
+    backdrop-filter: blur(4px);
+  }
+  .card-hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    z-index: 4;
+    border-radius: 16px;
+  }
+  .pp-card:hover .card-hover-overlay {
+    opacity: 1;
+  }
+  .card-hover-overlay span {
+    color: #000;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1.5px solid #000;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.9);
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  .card-hover-overlay span:hover {
+    background: #000;
+    color: #fff;
+  }
+  .card-info {
+    padding: 12px 4px 4px;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    height: 105px;
+  }
+  .card-title {
+    margin: 0 0 4px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    height: 2.6rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-cat-tag {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: #888;
+    margin-bottom: 6px;
+    height: 1.1rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .card-price-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-top: auto;
+    width: 100%;
+  }
+  .card-price {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #111;
+    white-space: nowrap;
+  }
+  .card-price-original {
+    font-size: 0.88rem;
+    color: #999;
+    text-decoration: line-through;
+    white-space: nowrap;
+  }
 
-  /* ── Filter panel ── */
   .sidebar-title { font-weight:700; font-size:1rem; color:#111; margin:0 0 14px; }
   .filter-body   { display:flex; flex-direction:column; gap:0; }
   .filter-section { border-bottom:1px solid #ebebeb; padding-bottom:14px; margin-bottom:14px; }
@@ -819,42 +886,34 @@ const GLOBAL_CSS = `
   .apply-btn { width:100%; padding:10px; background:#111; color:#fff; border:none; border-radius:10px; font-family:'Syne',sans-serif; font-weight:700; font-size:0.85rem; cursor:pointer; margin-bottom:8px; }
   .clear-btn  { width:100%; padding:9px; background:transparent; color:#999; border:1.5px solid #e0e0e0; border-radius:10px; font-size:0.82rem; cursor:pointer; }
 
-  /* ── Topbar controls ── */
   .filter-btn { display:flex; align-items:center; gap:6px; padding:8px 14px; background:#111; color:#fff; border:none; border-radius:10px; font-size:0.82rem; font-family:'Syne',sans-serif; font-weight:600; cursor:pointer; }
   .count-dot  { display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; background:#e53e3e; color:#fff; border-radius:50%; font-size:0.62rem; font-weight:700; }
   .result-text { font-size:0.88rem; color:#555; margin:0; }
   .sort-select { padding:7px 12px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:0.82rem; background:#fff; color:#111; cursor:pointer; outline:none; }
 
-  /* ── Active filter chips ── */
   .active-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
   .filter-tag  { display:inline-flex; align-items:center; gap:5px; padding:4px 10px 4px 12px; background:#111; color:#fff; border-radius:20px; font-size:0.73rem; }
   .tag-x       { background:none; border:none; color:#fff; cursor:pointer; font-size:0.62rem; padding:0; opacity:0.7; }
 
-  /* ── Pagination ── */
-  .pg-wrap { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:32px; flex-wrap:wrap; }
-  .pg-btn  { padding:8px 14px; border:1.5px solid #e0e0e0; border-radius:8px; background:#fff; color:#444; font-size:0.82rem; cursor:pointer; transition:all 0.15s; }
-  .pg-btn-active   { background:#111; color:#fff; border:1.5px solid #111; font-weight:600; }
-  .pg-btn-disabled { opacity:0.35; cursor:not-allowed; }
-  .pg-ellipsis     { padding:8px 4px; color:#aaa; font-size:0.82rem; }
+  .infinite-scroll-trigger { display: flex; justify-content: center; align-items: center; padding: 24px 0; min-height: 50px; width: 100%; }
+  .infinite-scroll-loader  { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #666; font-size: 0.85rem; }
+  .spinner { width: 28px; height: 28px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #111; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── Drawer ── */
   .drawer-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.46); z-index:1000; display:flex; align-items:flex-end; }
   .drawer      { width:100%; max-height:88vh; background:#fff; border-radius:20px 20px 0 0; display:flex; flex-direction:column; }
   .drawer-head { display:flex; align-items:center; justify-content:space-between; padding:18px 18px 12px; border-bottom:1px solid #f0f0f0; }
   .drawer-body { overflow-y:auto; flex:1; padding:0 18px 24px; }
   .drawer-x    { background:none; border:none; font-size:1.1rem; color:#555; cursor:pointer; padding:4px; }
 
-  /* ── Empty state ── */
   .empty-state { display:flex; flex-direction:column; align-items:center; padding:56px 20px; gap:10px; text-align:center; }
   .empty-text  { font-family:'Syne',sans-serif; font-weight:700; color:#333; margin:0; }
 
-  /* ── Skeleton ── */
   .sk-base { background:linear-gradient(90deg,#f0f0f0 25%,#e6e6e6 50%,#f0f0f0 75%); background-size:200% 100%; animation:shimmerAnim 1.4s infinite; border-radius:0; }
 
-  /* ── Category Slider ── */
   .sl-section  { padding:16px 16px 8px; user-select:none; -webkit-user-select:none; background:#f6f6f4; }
   .sl-header   { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-  .sl-title    { font-family:var(--font-poppins); font-size:1.2rem; font-weight:700; margin:0; color:#111; width:100%; }
+  .sl-title    { font-family:var(--font-roboto); font-size:1.2rem; font-weight:700; margin:0; color:#111; width:100%; }
   .sl-btn      { width:30px; height:30px; border-radius:50%; border:1.5px solid #e0e0e0; background:#fff; color:#222; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
   .sl-viewport { overflow:hidden; cursor:grab; touch-action:pan-y; }
   .sl-track    { display:flex; gap:8px; will-change:transform; }
@@ -869,7 +928,6 @@ const GLOBAL_CSS = `
   .sl-dot        { width:7px; height:7px; border-radius:50%; border:none; cursor:pointer; padding:0; transition:all 0.25s; background:#d4d4d4; transform:scale(1); }
   .sl-dot-active { background:#111; transform:scale(1.45); }
 
-  /* ── Responsive ── */
   .pp-mobile-filter-btn { display: none !important; }
   .pp-desktop-sort      { display: flex; align-items: center; gap: 8px; }
 
@@ -878,6 +936,21 @@ const GLOBAL_CSS = `
     .pp-sidebar           { display: none !important; }
     .pp-mobile-filter-btn { display: flex !important; }
     .pp-desktop-sort      { display: none !important; }
+    .card-badge {
+      top: 4px;
+      left: 4px;
+      font-size: 0.62rem;
+      padding: 3px 8px;
+    }
+    .card-price-row {
+      gap: 5px;
+    }
+    .card-price {
+      font-size: 0.85rem;
+    }
+    .card-price-original {
+      font-size: 0.72rem;
+    }
   }
   @media (min-width: 861px) {
     .pp-mobile-cat { display: none; }
