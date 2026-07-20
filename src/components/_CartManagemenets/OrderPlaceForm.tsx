@@ -2,11 +2,12 @@
 
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
+import OrderSuccessModal from "./OrderSuccessModal";
 
 import { usePlaceOrder } from "../../Apis/order";
 import {
@@ -69,6 +70,17 @@ const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYY
   );
   const [draftId, setDraftId] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successOrderData, setSuccessOrderData] = useState<{
+    orderNumber?: string;
+    fullName: string;
+    phone: string;
+    addressLine: string;
+    deliveryArea: "INSIDE_CITY" | "OUTSIDE_CITY";
+    paymentMethod: "CASH_ON_DELIVERY" | "ONLINE_PAYMENT";
+    paymentGateway?: string;
+    deliveryCharge: number;
+  } | null>(null);
 
   const isSubmittingRef = useRef(false);
   const latestValuesRef = useRef<TPlaceOrderFormValues>(DEFAULT_FORM_VALUES);
@@ -246,10 +258,20 @@ const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYY
           localStorage.removeItem(CHECKOUT_DRAFT_ID_STORAGE_KEY);
         }
         toast.success(res?.message || "Order placed successfully");
+        setSuccessOrderData({
+          orderNumber: res?.data?.orderNumber || res?.orderNumber || undefined,
+          fullName: values.fullName,
+          phone: values.phone,
+          addressLine: values.addressLine,
+          deliveryArea: values.deliveryArea,
+          paymentMethod: values.paymentMethod,
+          paymentGateway: values.paymentGateway,
+          deliveryCharge,
+        });
+        setShowSuccessModal(true);
         reset(DEFAULT_FORM_VALUES);
         setActiveGateway("BKASH");
         setDraftId(null);
-        router.push("/userDashboard/order");
       } else {
         toast.error(res?.message || "Failed to place order");
       }
@@ -676,6 +698,12 @@ const nagadNumber = paymentSettingResponse?.data?.nagadNumber?.trim() || "01YYYY
 
         </div>
       </div>
+
+      <OrderSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        orderData={successOrderData}
+      />
     </div>
   );
 };

@@ -800,7 +800,7 @@ function ProductDetails({ product }: { product: ProductData }) {
               disabled={soldOut || isPending}
               onClick={handleAddToCart}
             >
-              {soldOut ? "Unavailable" : isPending ? "Processing..." : "Buy it now"}
+              {soldOut ? "Unavailable" : isPending ? "Processing..." : "Buy Now"}
             </button>
 
             <div className="pd-delivery">
