@@ -42,7 +42,7 @@ export default function ProductImageGallery({
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [lensPosition, setLensPosition] = useState({ x: 0, y: 0 });
   const [mobileZoomImage, setMobileZoomImage] = useState<string | null>(null);
-  const [imgVisible, setImgVisible] = useState(true);
+  const [animClass, setAnimClass] = useState("");
 
   const imageWrapperRef = useRef<HTMLDivElement>(null);
   const thumbStripRef = useRef<HTMLDivElement>(null);
@@ -67,13 +67,28 @@ export default function ProductImageGallery({
 
   const changeImage = useCallback(
     (idx: number) => {
-      setImgVisible(false);
+      const total = images.length;
+      if (total <= 1) return;
+      const targetIndex = (idx + total) % total;
+      if (targetIndex === activeIndex) return;
+
+      let dir: "left" | "right" = "left";
+      if (targetIndex < activeIndex) dir = "right";
+      if (activeIndex === 0 && targetIndex === total - 1) dir = "right";
+      if (activeIndex === total - 1 && targetIndex === 0) dir = "left";
+
+      setAnimClass(dir === "left" ? "slide-out-left" : "slide-out-right");
+
       setTimeout(() => {
-        onImageChange((idx + images.length) % images.length);
-        setImgVisible(true);
-      }, 130);
+        onImageChange(targetIndex);
+        setAnimClass(dir === "left" ? "slide-in-left" : "slide-in-right");
+
+        setTimeout(() => {
+          setAnimClass("");
+        }, 20);
+      }, 140);
     },
-    [images.length, onImageChange],
+    [activeIndex, images.length, onImageChange],
   );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -159,9 +174,28 @@ export default function ProductImageGallery({
           padding: 0;
           pointer-events: none;
           -webkit-user-drag: none;
-          transition: opacity 0.13s ease;
+          transition: transform 0.22s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.22s ease;
+          transform: translateX(0);
+          opacity: 1;
         }
-        .pgal-main-img.fade-out { opacity: 0; }
+        .pgal-main-img.slide-out-left {
+          transform: translateX(-30%);
+          opacity: 0;
+        }
+        .pgal-main-img.slide-out-right {
+          transform: translateX(30%);
+          opacity: 0;
+        }
+        .pgal-main-img.slide-in-left {
+          transform: translateX(30%);
+          opacity: 0;
+          transition: none !important;
+        }
+        .pgal-main-img.slide-in-right {
+          transform: translateX(-30%);
+          opacity: 0;
+          transition: none !important;
+        }
         .pgal-main-img.clickable { cursor: zoom-in; }
 
         .pgal-dots {
@@ -404,7 +438,7 @@ export default function ProductImageGallery({
             src={images[activeIndex]}
             alt={productName}
             fill
-            className={`pgal-main-img${!imgVisible ? " fade-out" : ""}${!isDesktop ? " clickable" : ""}`}
+            className={`pgal-main-img${animClass ? ` ${animClass}` : ""}${!isDesktop ? " clickable" : ""}`}
             sizes="(max-width: 640px) 100vw, (max-width: 900px) 50vw, 42vw"
             priority
             unoptimized

@@ -26,7 +26,7 @@ interface Product {
   slug: string;
   productCardImage: string;
   title: string;
-  cardShortTitle: string;
+  cardShortTitle?: string | null;
   price: number;
   stock: number;
   totalReviews: number;
@@ -80,7 +80,7 @@ function useFilters(searchParams: ReturnType<typeof useSearchParams>) {
     ...(color && { color }),
     ...(sort && { sort }),
     page,
-    limit: 12,
+    limit: 10000000000,
   };
 
   const activeCount = [minPrice, maxPrice, size, color, sort].filter(Boolean).length;
@@ -123,8 +123,8 @@ function ProductsPage() {
   const { data: prodData, isLoading, isError, isFetching } = useGetAllProducts(params as any);
 
   const categories: Category[] = catData?.data ?? [];
-  const meta: Meta             = prodData?.meta ?? { page: 1, limit: 12, total: 0 };
-  const totalPages             = Math.ceil(meta.total / meta.limit);
+  const meta: Meta = prodData?.meta ?? { page: 1, limit: 12, total: 0 };
+  const totalPages = Math.ceil(meta.total / meta.limit);
 
   const activeCatName = categories.find((c) => c.id === categoryId)?.title;
 
@@ -212,7 +212,7 @@ function ProductsPage() {
     <>
       <style>{GLOBAL_CSS}</style>
 
-      {}
+      { }
       <div className="pp-mobile-cat">
         <CategorySlider
           categories={categories}
@@ -223,7 +223,7 @@ function ProductsPage() {
       </div>
 
       <div className="pp-root">
-        {}
+        { }
         <aside className="pp-sidebar">
           <p className="sidebar-title">Filters</p>
           <FilterPanel
@@ -247,9 +247,9 @@ function ProductsPage() {
           />
         </aside>
 
-        {}
+        { }
         <main className="pp-main">
-          {}
+          { }
           <div className="pp-topbar">
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button className="pp-mobile-filter-btn filter-btn" onClick={openDrawer}>
@@ -275,7 +275,7 @@ function ProductsPage() {
             </div>
           </div>
 
-          {}
+          { }
           {activeCount > 0 && (
             <div className="active-chips">
               {minPrice && <Tag label={`Min ৳${minPrice}`} onX={() => setMinPrice("")} />}
@@ -286,7 +286,7 @@ function ProductsPage() {
             </div>
           )}
 
-          {}
+          { }
           {isLoading && page === 1 ? (
             <div className="pp-grid">
               {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
@@ -318,7 +318,7 @@ function ProductsPage() {
         </main>
       </div>
 
-      {}
+      { }
       {drawerOpen && (
         <div className="drawer-backdrop" onClick={() => setDrawerOpen(false)}>
           <div className="drawer" onClick={(e) => e.stopPropagation()}>
@@ -371,7 +371,7 @@ const FilterPanel = memo(function FilterPanel({
 }) {
   return (
     <div className="filter-body">
-      {}
+      { }
       <div className="filter-section">
         <CatBtn active={!categoryId} onClick={() => onCategorySelect("")}>All Products</CatBtn>
         {categories.map((c) => (
@@ -381,7 +381,7 @@ const FilterPanel = memo(function FilterPanel({
         ))}
       </div>
 
-      {}
+      { }
       <div className="filter-section">
         <p className="filter-label">Sort By</p>
         {SORT_OPTIONS.map((o) => (
@@ -391,7 +391,7 @@ const FilterPanel = memo(function FilterPanel({
         ))}
       </div>
 
-      {}
+      { }
       <div className="filter-section">
         <p className="filter-label">Price Range (৳)</p>
         <div style={{ display: "flex", gap: 8 }}>
@@ -408,7 +408,7 @@ const FilterPanel = memo(function FilterPanel({
         </div>
       </div>
 
-      {}
+      { }
       <div className="filter-section">
         <p className="filter-label">Size</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -418,7 +418,7 @@ const FilterPanel = memo(function FilterPanel({
         </div>
       </div>
 
-      {}
+      { }
       <div className="filter-section">
         <p className="filter-label">Color</p>
         <div className="color-wrap">
@@ -599,12 +599,11 @@ const ProductCard = memo(function ProductCard({
 }) {
   const [hov, setHov] = useState(false);
   const soldOut = product.stock === 0;
-  const router  = useRouter();
+  const router = useRouter();
 
   const handleDetailsNavigate = useCallback(() => router.push(`/product/${product.slug}`), [router, product.slug]);
 
-  const showSale = product.badge === "SALE";
-  const originalPrice = showSale ? Math.round((product.price * 1.15) / 100) * 100 : null;
+  const originalPrice = Math.round((product.price * 1.15) / 100) * 100;
 
   const formatBadge = (badge: string) => {
     if (badge === "BEST_SELLER") return "Best Seller";
@@ -652,11 +651,13 @@ const ProductCard = memo(function ProductCard({
 
       <div className="card-info">
         <p className="card-title">{product.title}</p>
-        {product.category?.title && (
-          <span className="card-cat-tag">{product.category.title}</span>
+        {(product.cardShortTitle || product.category?.title) && (
+          <span className="card-cat-tag">
+            {product.cardShortTitle || product.category?.title}
+          </span>
         )}
         <div className="card-price-row">
-          {showSale && originalPrice && (
+          {originalPrice && (
             <span className="card-price-original">Tk {originalPrice.toLocaleString()}</span>
           )}
           <span className="card-price">Tk {product.price.toLocaleString()}</span>
@@ -819,44 +820,48 @@ const GLOBAL_CSS = `
     color: #fff;
   }
   .card-info {
-    padding: 12px 4px 4px;
+    padding: 10px 4px 6px;
     background: transparent;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     text-align: left;
-    height: 105px;
+    gap: 2px;
+    box-sizing: border-box;
   }
   .card-title {
-    margin: 0 0 4px;
-    font-size: 0.95rem;
+    margin: 0;
+    font-size: 0.92rem;
     font-weight: 700;
     color: #111;
     letter-spacing: -0.01em;
-    line-height: 1.35;
-    height: 2.6rem;
+    line-height: 1.25;
+    max-height: 2.5rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-break: break-word;
   }
   .card-cat-tag {
-    display: inline-block;
-    font-size: 0.78rem;
+    display: -webkit-box;
+    font-size: 0.74rem;
     font-weight: 400;
     color: #888;
-    margin-bottom: 6px;
-    height: 1.1rem;
+    line-height: 1.2;
+    margin: 0;
+    max-height: 2.4rem;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    word-break: break-word;
   }
   .card-price-row {
     display: flex;
     align-items: baseline;
     justify-content: flex-start;
     gap: 8px;
-    margin-top: auto;
+    margin-top: 4px;
     width: 100%;
   }
   .card-price {
@@ -869,6 +874,7 @@ const GLOBAL_CSS = `
     font-size: 0.88rem;
     color: #999;
     text-decoration: line-through;
+    text-decoration-color: #e53e3e;
     white-space: nowrap;
   }
 
